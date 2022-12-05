@@ -35,17 +35,17 @@ int main(int argc, char const ** argv) {
         }
         
         // TODO: Fetch all the local file headers (probably only the ones given by the cdrs we've collected)
-        // auto localHeaders = readLocalHeaders(zipfile, cdr);
+        auto localHeaders = readLocalHeaders(zipfile, cdr);
 
-        // cout << "=== Local headers ===" << endl;
-        // for (auto record : localHeaders) {
-        //     cout << string(record.filename.begin(), record.filename.end()) << endl;
-        // }
+        cout << "=== Local headers ===" << endl;
+        for (auto record : localHeaders) {
+            cout << record << endl;
+        }
 
         // TODO: Rewrite offsets
-        // for (auto& record : cdr) {
-        //     record.relOffset += eomainfile;
-        // }
+        for (auto& record : cdr) {
+            record.relOffset += eomainfile;
+        }
 
         // TODO: Write out all the local file headers plus data payloads (the ones that we've collected)
         // for (auto header : localHeaders) {

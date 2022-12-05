@@ -50,8 +50,13 @@ std::ostream& operator<< (std::ostream& os, CDR record) {
 std::ostream& operator<< (std::ostream& os, LocalHeader record) {
     auto f(os.flags());
 
-    os << "filename: " << std::string(record.filename.begin(), record.filename.end()) << std::endl;
+    os << "filename: " << std::string(record.filename.begin(), record.filename.end()) << "🔚" << std::endl;
     os << "compressed (actual, right-now) size: " << std::hex << record.compressedSize << std::endl;
+
+    os << "file name length:\t0x"
+       << std::hex << std::setfill('0') << std::setw(2) << record.filenameLength << std::endl;
+    os << "extra field length:\t0x"
+       << record.extraLength << std::endl; 
 
     os.flags(f);
     return os;
@@ -134,8 +139,10 @@ std::vector<CDR> readCDR(std::ifstream &zipfile, std::streampos beginAt, uint16_
         zipfile.read(reinterpret_cast<char*>(buffer), cdrSize);
 
         if (readDWordLE(buffer) != cdrMagic) {
-            // std::cout << "CDR magic wrong at " << zipfile.tellg() <<  std::endl;
-            throw std::runtime_error("Encountered a non-central directory record at " + std::to_string(at));
+            std::stringstream errMsg;
+            errMsg << "Encountered a non-central directory record at "
+                   << std::hex << at;
+            throw std::runtime_error(errMsg.str());
         }
 
         CDR record{
@@ -183,20 +190,30 @@ std::vector<LocalHeader> readLocalHeaders(std::ifstream &zipfile, std::vector<CD
 
     std::vector<LocalHeader> localHeaders;
     for (CDR record : cdr) {
-        zipfile.seekg(record.relOffset + std::streamoff(4), std::ios_base::beg);
+        auto at = zipfile.tellg();
+        // std::cout << at << std::endl;
+
+        zipfile.seekg(record.relOffset, std::ios_base::beg);
         zipfile.read(reinterpret_cast<char*>(buffer), localHeaderSize);
 
+        if (readDWordLE(buffer) != localHeaderMagic) {
+            std::stringstream errMsg;
+            errMsg << "Encountered a non-local header at "
+                   << std::hex << at;
+            throw std::runtime_error(errMsg.str());
+        }
+
         LocalHeader localHeader{
-            .versionNeeded = readWordLE(buffer),
-            .generalPurpose = readWordLE(buffer+2),
-            .compressionMethod = readWordLE(buffer+4),
-            .lastModTime = readWordLE(buffer+6),
-            .lastModDate = readWordLE(buffer+8),
-            .crc32 = readDWordLE(buffer+10),
-            .compressedSize = readDWordLE(buffer+14),
-            .uncompressedSize = readDWordLE(buffer+18),
-            .filenameLength = readWordLE(buffer+22),
-            .extraLength = readWordLE(buffer+24)
+            .versionNeeded = readWordLE(buffer+4),
+            .generalPurpose = readWordLE(buffer+6),
+            .compressionMethod = readWordLE(buffer+8),
+            .lastModTime = readWordLE(buffer+10),
+            .lastModDate = readWordLE(buffer+12),
+            .crc32 = readDWordLE(buffer+14),
+            .compressedSize = readDWordLE(buffer+18),
+            .uncompressedSize = readDWordLE(buffer+22),
+            .filenameLength = readWordLE(buffer+26),
+            .extraLength = readWordLE(buffer+28)
         };
         localHeader.data = zipfile.tellg() + std::streamoff(localHeader.filenameLength + localHeader.extraLength);
 

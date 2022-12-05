@@ -86,7 +86,7 @@ using CDR = struct CDR {
     std::vector<char> comment;
 };
 
-const size_t localHeaderSize = 26;
+const size_t localHeaderSize = 30;
 using LocalHeader = struct LocalHeader {
     WORD versionNeeded;
     WORD generalPurpose;
