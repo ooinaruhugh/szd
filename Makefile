@@ -1,10 +1,26 @@
 CXX=g++
 CXXFLAGS=-I.
-DEPS = zip.h util.h
+INCLUDES=
+DEPS = zip/zip.h util.h
+SRCS = main.cpp zip/zip.cpp
+OBJS = $(SRCS:.cpp=.o)
 
-main: zip.o main.o
-	$(CXX) -o szd zip.o main.o
+MAINNAME = szd
+
+main: $(OBJS)
+	$(CXX) -o $(MAINNAME) $(OBJS)
+
+# zipinfo: $(OBJS)
+# 	$(CXX) -o zipinfo $(OBJS)
 
 %.o: %.cpp $(DEPS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
-	
+
+depend: $(SRCS)
+	# makedepend $(INCLUDES) $^
+	makedepend $^
+
+clean: 
+	$(RM) $(OBJS) $(MAINNAME)
+
+.PHONY: depend clean
