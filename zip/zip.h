@@ -1,13 +1,10 @@
-#include <cinttypes>
 #include <cstring>
-#include <ios>
-#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <array>
 
-#include "util.h"
+#include "../util.h"
 
 #ifndef _ZIP_H
 #define _ZIP_H
@@ -20,15 +17,6 @@ const DWORD archiveExtraMagic = 0x08064b50;
 const DWORD digitalSignatureMagic = 0x05054b50;
 const DWORD eocdr64Magic = 0x06064b50;
 const DWORD eocdr64LocatorMagic = 0x07064b50;
-
-// class Zipfile {
-//     std::ifstream file;
-//     EOCDR eocdr;
-//     std::vector<LocalHeader> localHeaders;
-
-//     public:
-//     Zipfile(const char *filename);
-// };
 
 const size_t eocdrSize = 22;
 using EOCDR = struct EOCDR {
@@ -126,14 +114,24 @@ using DigitalSignature = struct DigitalSignature {
     char* data;
 };
 
+class Zipfile {
+    // EOCDR eocdr;
+    // std::vector<LocalHeader> localHeaders;
+    std::ifstream file;
+
+    public:
+        Zipfile(const char *filename);
+
+        std::streampos findEOCDR();
+        EOCDR readEOCDR(std::streampos at);
+
+        std::vector<CDR> readCDR(std::streampos beginAt, WORD noOfRecords);
+        
+        std::vector<LocalHeader> readLocalHeaders(std::vector<CDR> cdr);
+};
+
 std::ostream& operator<< (std::ostream& os, EOCDR eocdr);
 std::ostream& operator<< (std::ostream& os, CDR record);
 std::ostream& operator<< (std::ostream& os, LocalHeader record);
-
-std::streampos findEOCDR(std::ifstream &zipfile);
-
-EOCDR readEOCDR(std::ifstream &zipfile, std::streampos at);
-std::vector<CDR> readCDR(std::ifstream &zipfile, std::streampos beginAt, WORD noOfRecords);
-std::vector<LocalHeader> readLocalHeaders(std::ifstream &zipfile, std::vector<CDR> cdr);
 
 #endif // _ZIP_H

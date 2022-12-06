@@ -2,7 +2,7 @@ CXX=g++
 CXXFLAGS=-I.
 INCLUDES=
 DEPS = zip/zip.h util.h
-SRCS = main.cpp zip/zip.cpp
+SRCS = main.cpp util.cpp zip/zip.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 MAINNAME = szd
