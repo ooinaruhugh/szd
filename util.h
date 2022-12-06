@@ -1,4 +1,6 @@
 #include <cinttypes>
+#include <vector>
+#include <cstddef>
 
 #ifndef _UTIL_H
 #define _UTIL_H
@@ -46,8 +48,12 @@ inline QWORD readQWordLE(const unsigned char* bytes) {
            | ((QWORD)bytes[0]);
 }
 
-// void printBuffer(const char* buffer, size_t n) {
+template<typename T>
+inline void appendVectorToVector(std::vector<T>& to, std::vector<T> from) {
+    to.insert(to.end(), from.cbegin(), from.cend());
+}
 
-// }
+void printByteBuffer(const char* buffer, size_t n);
+void printByteBuffer(const std::vector<char> buffer);
 
 #endif // _UTIL_H
