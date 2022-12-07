@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 
 #include "zip/zip.h"
@@ -10,24 +11,21 @@ int main(int argc, char const ** argv) {
         exit(EXIT_FAILURE);
     }
 
-    ifstream zipfile{argv[1], std::ifstream::ate | std::ifstream::binary};
+    ZipFile zipfile{argv[1]};
     ifstream mainfile{"test.app", std::ifstream::ate | std::ifstream::binary};
-    // std::ofstream output{"output", std::ofstream::binary};
+    std::ofstream output{"output", std::ofstream::binary};
 
-    // auto inbuf      = zipfile.rdbuf();
-    // auto outbuf     = mainfile.rdbuf();
     auto eomainfile = mainfile.tellg();
+    auto eocdrPos   = zipfile.findEOCDR();
 
-    auto eocdr_pos  = findEOCDR(zipfile);
-
-    if (eocdr_pos != std::streampos(-1)) {
-        cout << "EOCDR is at offset " << hex << eocdr_pos << endl;
-        auto eocdr = readEOCDR(zipfile, eocdr_pos);
+    if (eocdrPos != std::streampos(-1)) {
+        cout << "EOCDR is at offset " << hex << eocdrPos << endl;
+        auto eocdr = zipfile.readEOCDR(eocdrPos);
 
         cout << eocdr;
 
         // TODO: Build the central directory from the information in the eocdr
-        auto cdr = readCDR(zipfile, eocdr.startOfCDR, eocdr.currentDiskEntriesTotal);
+        auto cdr = zipfile.readCDRs(eocdr.startOfCDR, eocdr.currentDiskEntriesTotal);
 
         cout << "=== Central directory records ===" << endl;
         for (auto record : cdr) {
@@ -35,28 +33,26 @@ int main(int argc, char const ** argv) {
         }
         
         // TODO: Fetch all the local file headers (probably only the ones given by the cdrs we've collected)
-        auto localHeaders = readLocalHeaders(zipfile, cdr);
+        auto entries = zipfile.getZipEntries(cdr);
 
         cout << "=== Local headers ===" << endl;
-        for (auto record : localHeaders) {
-            cout << record << endl;
+        for (auto entry : entries) {
+            cout << entry.localHeader << endl;
         }
 
-        // TODO: Rewrite offsets
-        for (auto& record : cdr) {
-            record.relOffset += eomainfile;
-        }
+        // mainfile.seekg(0);
+        // output << mainfile.rdbuf();
 
         // TODO: Write out all the local file headers plus data payloads (the ones that we've collected)
+        // vector<char> buffer;
         // for (auto header : localHeaders) {
-        //     mainfile.write((char*)localHeaderMagic,sizeof(localHeaderMagic));
-        //     mainfile.write(header.getAsByteArray().data(), localHeaderSize);
-        //     mainfile.write(header.filename.data(), header.filenameLength);
-        //     mainfile.write(header.extra.data(), header.extraLength);
+        //     output.write(reinterpret_cast<const char*>(&localHeaderMagic), sizeof(localHeaderMagic));
+        //     output.write(header.getAsByteArray().data(), localHeaderSize-4);
+        //     output.write(header.filename.data(), header.filenameLength);
+        //     output.write(header.extra.data(), header.extraLength);
 
-        //     zipfile.seekg(header.data, zipfile.beg);
-        //     std::istreambuf_iterator<char> begin(zipfile);
-        //     auto end = begin + header.compressedSize;
+        //     // auto compressedData= zipfile.copyDataAt(header.cdr->relOffset, header.compressedSize);
+        //     // output.write(compressedData.data(), header.compressedSize);
         // }
         
         // TODO: Write archive extra data if there's any

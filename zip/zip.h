@@ -27,7 +27,7 @@ using EOCDR = struct EOCDR {
     DWORD size;
     DWORD startOfCDR;
     WORD commentSize;
-    char* comment;
+    std::vector<char> comment;
 };
 
 const size_t eocdr64Size = 22;
@@ -114,20 +114,40 @@ using DigitalSignature = struct DigitalSignature {
     char* data;
 };
 
-class Zipfile {
-    // EOCDR eocdr;
-    // std::vector<LocalHeader> localHeaders;
+using ZipEntry = struct ZipEntry {
+    LocalHeader localHeader;
+    CDR cdr;
+
+    ZipEntry(LocalHeader localHeader, CDR cdr) { 
+        this->localHeader = localHeader;
+        this->cdr = cdr;
+    }
+};
+
+class ZipFile {
+    bool hasEocdrPos = false;
+    std::streampos eocdrPos;
+
+    bool hasEocdr = false;
+    EOCDR eocdr;
+
+    bool hasEntries = false;
+    std::vector<ZipEntry> entries;
+    
     std::ifstream file;
 
     public:
-        Zipfile(const char *filename);
+        ZipFile(const char *filename);
 
         std::streampos findEOCDR();
         EOCDR readEOCDR(std::streampos at);
 
-        std::vector<CDR> readCDR(std::streampos beginAt, WORD noOfRecords);
-        
-        std::vector<LocalHeader> readLocalHeaders(std::vector<CDR> cdr);
+        std::vector<CDR> readCDRs(std::streampos beginAt, WORD noOfRecords);
+        LocalHeader readLocalHeader(std::streampos at);
+
+        std::vector<ZipEntry> getZipEntries(std::vector<CDR> cdrs);
+
+        std::vector<char> copyDataAt(std::streampos at, size_t n);
 };
 
 std::ostream& operator<< (std::ostream& os, EOCDR eocdr);

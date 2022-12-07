@@ -17,7 +17,7 @@ void printByteBuffer(const char* buffer, size_t n) {
     while (n-- > 0) {
         auto f{std::cout.flags()};
 
-        std::cout << std::setfill('0') << std::setw(2) << std::hex << +*(buffer++) << ' ';
+        std::cout << std::setfill('0') << std::setw(2) << std::hex << +(unsigned char)*(buffer++) << ' ';
             
         std::cout.flags(f);
     }

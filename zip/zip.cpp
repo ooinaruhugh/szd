@@ -5,7 +5,7 @@
 
 #include "zip.h"
 
-Zipfile::Zipfile(const char *filename) {
+ZipFile::ZipFile(const char *filename) {
     this->file = std::ifstream(filename, std::ifstream::ate | std::ifstream::binary);
 }
 
@@ -26,8 +26,10 @@ std::ostream& operator<< (std::ostream& os, EOCDR eocdr) {
        << eocdr.startOfCDR << std::endl;
     os << ".ZIP file comment length:\t0x"
        << eocdr.commentSize << std::endl;
-    os << ".ZIP file comment:\t"
-       << "<TODO: Here goes comment>" << std::endl;
+    if (eocdr.commentSize > 0) {
+        os << ".ZIP file comment:\t"
+        << std::string(eocdr.comment.begin(), eocdr.comment.end()) << std::endl;
+    }
 
     os.flags(f);
     return os;
@@ -69,14 +71,14 @@ std::ostream& operator<< (std::ostream& os, LocalHeader record) {
     return os;
 }
 
-std::streampos Zipfile::findEOCDR() {
+std::streampos ZipFile::findEOCDR() {
+    if (this->hasEocdrPos) return this->eocdrPos;
+
     // TODO Handle random occurences of 0x06054B50 https://stackoverflow.com/questions/8593904/how-to-find-the-position-of-central-directory-in-a-zip-file)
     std::streampos central_directory;
     
     const int readBufferSize = 512;
-    // char searchBuffer[readBufferSize+1];
     std::array<char,readBufferSize> searchBuffer;
-    // searchBuffer.resize(readBufferSize+1);
 
     char* needle = nullptr;
 
@@ -96,15 +98,18 @@ std::streampos Zipfile::findEOCDR() {
         needle = (char*)memmem(searchBuffer.data(), readBufferSize, &eocdrMagic, 4);
     } while ((central_directory > 0) && needle == nullptr);
     
-    return needle ? central_directory + (needle - searchBuffer.data()) : std::streampos(-1);
+    this->eocdrPos = needle ? central_directory + (needle - searchBuffer.data()) : std::streampos(-1);
+    this->hasEocdrPos = true;
+
+    return this->eocdrPos;
 }
 
-EOCDR Zipfile::readEOCDR(std::streampos at) {
+EOCDR ZipFile::readEOCDR(std::streampos at) {
+    if (this->hasEocdr) return this->eocdr;
+
     unsigned char buffer[eocdrSize];
     this->file.clear();
     this->file.seekg(at, std::ios_base::beg);
-
-    // std::cout << at << " " << zipfile.tellg() << std::endl;
     this->file.read(reinterpret_cast<char*>(buffer), eocdrSize);
 
     if (readDWordLE(buffer) != eocdrMagic) {
@@ -119,26 +124,20 @@ EOCDR Zipfile::readEOCDR(std::streampos at) {
         .size = readDWordLE(buffer+12),
         .startOfCDR = readDWordLE(buffer+16),
         .commentSize = readWordLE(buffer+20),
-        .comment = NULL
     };
 
     if (eocdr.commentSize > 0) {
-
+        eocdr.comment.resize(eocdr.commentSize);
+        this->file.read(eocdr.comment.data(),eocdr.commentSize);
     }
 
-    // for (unsigned char c : buffer) {
-    //     auto f{std::cout.flags()};
-
-    //     std::cout << std::setfill('0') << std::setw(2) << std::hex << +c << ' ';
-        
-    //     std::cout.flags(f);
-    // }
-    // std::cout << std::endl;
+    this->eocdr = eocdr;
+    this->hasEocdr = true;
 
     return eocdr;
 }
 
-std::vector<CDR> Zipfile::readCDR( std::streampos beginAt, uint16_t noOfRecords) {
+std::vector<CDR> ZipFile::readCDRs(std::streampos beginAt, WORD noOfRecords) {
     unsigned char buffer[cdrSize];
     this->file.clear();
     this->file.seekg(beginAt, std::ios_base::beg);
@@ -191,49 +190,66 @@ std::vector<CDR> Zipfile::readCDR( std::streampos beginAt, uint16_t noOfRecords)
     return cdr;
 }
 
-std::vector<LocalHeader> Zipfile::readLocalHeaders(std::vector<CDR> cdr) {
+LocalHeader ZipFile::readLocalHeader(std::streampos at) {
     unsigned char buffer[localHeaderSize];
+
     this->file.clear();
+    this->file.seekg(at, std::ios_base::beg);
+    this->file.read(reinterpret_cast<char*>(buffer), localHeaderSize);
 
-    std::vector<LocalHeader> localHeaders;
-    for (CDR record : cdr) {
-        auto at = this->file.tellg();
-        // std::cout << at << std::endl;
-
-        this->file.seekg(record.relOffset, std::ios_base::beg);
-        this->file.read(reinterpret_cast<char*>(buffer), localHeaderSize);
-
-        if (readDWordLE(buffer) != localHeaderMagic) {
-            std::stringstream errMsg;
-            errMsg << "Encountered a non-local header at "
-                   << std::hex << at;
-            throw std::runtime_error(errMsg.str());
-        }
-
-        LocalHeader localHeader{
-            .versionNeeded = readWordLE(buffer+4),
-            .generalPurpose = readWordLE(buffer+6),
-            .compressionMethod = readWordLE(buffer+8),
-            .lastModTime = readWordLE(buffer+10),
-            .lastModDate = readWordLE(buffer+12),
-            .crc32 = readDWordLE(buffer+14),
-            .compressedSize = readDWordLE(buffer+18),
-            .uncompressedSize = readDWordLE(buffer+22),
-            .filenameLength = readWordLE(buffer+26),
-            .extraLength = readWordLE(buffer+28)
-        };
-        localHeader.data = this->file.tellg() + std::streamoff(localHeader.filenameLength + localHeader.extraLength);
-
-        localHeader.filename.resize(record.filenameLength);
-        this->file.read(localHeader.filename.data(), localHeader.filenameLength);
-
-        localHeader.extra.resize(localHeader.extraLength);
-        this->file.read(localHeader.extra.data(), localHeader.extraLength);
-
-        localHeaders.emplace_back(localHeader);
+    if (readDWordLE(buffer) != localHeaderMagic) {
+        std::stringstream errMsg;
+        errMsg << "Encountered a non-local header at "
+                << std::hex << at;
+        throw std::runtime_error(errMsg.str());
     }
 
-    return localHeaders;
+    LocalHeader localHeader{
+        .versionNeeded = readWordLE(buffer+4),
+        .generalPurpose = readWordLE(buffer+6),
+        .compressionMethod = readWordLE(buffer+8),
+        .lastModTime = readWordLE(buffer+10),
+        .lastModDate = readWordLE(buffer+12),
+        .crc32 = readDWordLE(buffer+14),
+        .compressedSize = readDWordLE(buffer+18),
+        .uncompressedSize = readDWordLE(buffer+22),
+        .filenameLength = readWordLE(buffer+26),
+        .extraLength = readWordLE(buffer+28)
+    };
+    localHeader.data = this->file.tellg() + std::streamoff(localHeader.filenameLength + localHeader.extraLength);
+
+    localHeader.filename.resize(localHeader.filenameLength);
+    this->file.read(localHeader.filename.data(), localHeader.filenameLength);
+
+    localHeader.extra.resize(localHeader.extraLength);
+    this->file.read(localHeader.extra.data(), localHeader.extraLength);
+
+    return localHeader;
+}
+
+std::vector<ZipEntry> ZipFile::getZipEntries(std::vector<CDR> cdrs) {
+    using namespace std;
+    std::vector<ZipEntry> entries;
+
+    for (auto cdr : cdrs) {
+        auto localHeader = this->readLocalHeader(cdr.relOffset);
+
+        entries.emplace_back(localHeader, cdr);
+    }
+
+    return entries;
+}
+
+std::vector<char> ZipFile::copyDataAt(std::streampos at, size_t n) {
+    std::vector<char> buffer;
+    buffer.resize(n);
+
+    this->file.clear();
+    this->file.seekg(at);
+
+    this->file.read(buffer.data(), n);
+
+    return buffer;
 }
 
 std::vector<char> LocalHeader::getAsByteArray() {
@@ -241,28 +257,15 @@ std::vector<char> LocalHeader::getAsByteArray() {
     zaBytes.reserve(localHeaderSize);
 
     appendVectorToVector(zaBytes, writeWordLE(this->versionNeeded));
-    printByteBuffer(zaBytes);
     appendVectorToVector(zaBytes, writeWordLE(this->generalPurpose));
-    printByteBuffer(zaBytes);
     appendVectorToVector(zaBytes, writeWordLE(this->compressionMethod));
-    printByteBuffer(zaBytes);
     appendVectorToVector(zaBytes, writeWordLE(this->lastModTime));
-    printByteBuffer(zaBytes);
     appendVectorToVector(zaBytes, writeWordLE(this->lastModDate));
-    printByteBuffer(zaBytes);
     appendVectorToVector(zaBytes, writeDWordLE(this->crc32));
-    printByteBuffer(zaBytes);
     appendVectorToVector(zaBytes, writeDWordLE(this->compressedSize));
-    printByteBuffer(zaBytes);
     appendVectorToVector(zaBytes, writeDWordLE(this->uncompressedSize));
-    printByteBuffer(zaBytes);
     appendVectorToVector(zaBytes, writeWordLE(this->filenameLength));
-    printByteBuffer(zaBytes);
     appendVectorToVector(zaBytes, writeWordLE(this->extraLength));
-    printByteBuffer(zaBytes);
-
-    std::cout << zaBytes.size() << std::endl;
-    
 
     return zaBytes;
 }
