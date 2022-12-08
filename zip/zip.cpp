@@ -252,20 +252,71 @@ std::vector<char> ZipFile::copyDataAt(std::streampos at, size_t n) {
     return buffer;
 }
 
+void ZipFile::copyNTo(std::ofstream& outfile, size_t n, char* buffer, size_t n_buffer) {
+    while (n > n_buffer) {
+        this->file.read(buffer, n_buffer);
+        outfile.write(buffer, n_buffer);
+
+        n -= n_buffer;
+    } if (n > 0) {
+        this->file.read(buffer, n);
+        outfile.write(buffer, n);
+    }
+}
+
 std::vector<char> LocalHeader::getAsByteArray() {
     std::vector<char> zaBytes;
     zaBytes.reserve(localHeaderSize);
 
-    appendVectorToVector(zaBytes, writeWordLE(this->versionNeeded));
-    appendVectorToVector(zaBytes, writeWordLE(this->generalPurpose));
-    appendVectorToVector(zaBytes, writeWordLE(this->compressionMethod));
-    appendVectorToVector(zaBytes, writeWordLE(this->lastModTime));
-    appendVectorToVector(zaBytes, writeWordLE(this->lastModDate));
-    appendVectorToVector(zaBytes, writeDWordLE(this->crc32));
-    appendVectorToVector(zaBytes, writeDWordLE(this->compressedSize));
-    appendVectorToVector(zaBytes, writeDWordLE(this->uncompressedSize));
-    appendVectorToVector(zaBytes, writeWordLE(this->filenameLength));
-    appendVectorToVector(zaBytes, writeWordLE(this->extraLength));
+    appendArrayToVector(zaBytes, writeWordLE(this->versionNeeded));
+    appendArrayToVector(zaBytes, writeWordLE(this->generalPurpose));
+    appendArrayToVector(zaBytes, writeWordLE(this->compressionMethod));
+    appendArrayToVector(zaBytes, writeWordLE(this->lastModTime));
+    appendArrayToVector(zaBytes, writeWordLE(this->lastModDate));
+    appendArrayToVector(zaBytes, writeDWordLE(this->crc32));
+    appendArrayToVector(zaBytes, writeDWordLE(this->compressedSize));
+    appendArrayToVector(zaBytes, writeDWordLE(this->uncompressedSize));
+    appendArrayToVector(zaBytes, writeWordLE(this->filenameLength));
+    appendArrayToVector(zaBytes, writeWordLE(this->extraLength));
+
+    return zaBytes;
+}
+
+std::vector<char> CDR::getAsByteArray() {
+    std::vector<char> zaBytes;
+    zaBytes.reserve(cdrSize-4);
+
+    appendArrayToVector(zaBytes, writeWordLE(this->versionMadeBy));
+    appendArrayToVector(zaBytes, writeWordLE(this->versionNeeded));
+    appendArrayToVector(zaBytes, writeWordLE(this->generalPurpose));
+    appendArrayToVector(zaBytes, writeWordLE(this->compressionMethod));
+    appendArrayToVector(zaBytes, writeWordLE(this->lastModTime));
+    appendArrayToVector(zaBytes, writeWordLE(this->lastModDate));
+    appendArrayToVector(zaBytes, writeDWordLE(this->crc32));
+    appendArrayToVector(zaBytes, writeDWordLE(this->compressedSize));
+    appendArrayToVector(zaBytes, writeDWordLE(this->uncompressedSize));
+    appendArrayToVector(zaBytes, writeWordLE(this->filenameLength));
+    appendArrayToVector(zaBytes, writeWordLE(this->extraLength));
+    appendArrayToVector(zaBytes, writeWordLE(this->commentLength));
+    appendArrayToVector(zaBytes, writeWordLE(this->diskNoStart));
+    appendArrayToVector(zaBytes, writeWordLE(this->internalAttr));
+    appendArrayToVector(zaBytes, writeDWordLE(this->externalAttr));
+    appendArrayToVector(zaBytes, writeDWordLE(this->relOffset));
+
+    return zaBytes;
+}
+
+std::vector<char> EOCDR::getAsByteArray() {
+    std::vector<char> zaBytes;
+    zaBytes.reserve(eocdrSize-4);
+
+    appendArrayToVector(zaBytes, writeWordLE(this->numOfDisk));
+    appendArrayToVector(zaBytes, writeWordLE(this->numOfStartDisk));
+    appendArrayToVector(zaBytes, writeWordLE(this->currentDiskEntriesTotal));
+    appendArrayToVector(zaBytes, writeWordLE(this->entriesTotal));
+    appendArrayToVector(zaBytes, writeDWordLE(this->size));
+    appendArrayToVector(zaBytes, writeDWordLE(this->startOfCDR));
+    appendArrayToVector(zaBytes, writeWordLE(this->commentSize));
 
     return zaBytes;
 }

@@ -1,8 +1,8 @@
-#include <cinttypes>
-#include <vector>
 #include <cstddef>
-#include <iostream>
-#include <fstream>
+#include <cinttypes>
+
+#include <vector>
+#include <array>
 
 #ifndef _UTIL_H
 #define _UTIL_H
@@ -16,8 +16,8 @@ inline WORD readWordLE(const unsigned char* bytes) {
     return ((WORD)bytes[1] << 8) | ((WORD)bytes[0]);
 }
 
-inline std::vector<char> writeWordLE(WORD bytes) {
-    return std::vector<char>{
+inline std::array<char, sizeof(WORD)> writeWordLE(WORD bytes) {
+    return {
         (char)(bytes & 0xFF),
         (char)((bytes & 0xFF00) >> 8)
     };
@@ -30,8 +30,8 @@ inline DWORD readDWordLE(const unsigned char* bytes) {
            | ((DWORD)bytes[0]);
 }
 
-inline std::vector<char> writeDWordLE(DWORD bytes) {
-    return std::vector<char>{
+inline std::array<char, sizeof(DWORD)> writeDWordLE(DWORD bytes) {
+    return {
         (char)(bytes & 0xFF),
         (char)((bytes & 0xFF00) >> 8),
         (char)((bytes & 0xFF0000) >> 16),
@@ -55,17 +55,10 @@ inline void appendVectorToVector(std::vector<T>& to, std::vector<T> from) {
     to.insert(to.end(), from.cbegin(), from.cend());
 }
 
-// void copyN(std::ifstream& infile, std::ofstream& outfile, size_t n, char* buffer, size_t n_buffer) {
-//     while (n > n_buffer) {
-//         infile.read(buffer, n_buffer);
-//         outfile.write(buffer, n_buffer);
-
-//         n -= n_buffer;
-//     } if (n > 0) {
-//         infile.read(buffer, n);
-//         outfile.write(buffer, n);
-//     }
-// }
+template<typename T, size_t size>
+inline void appendArrayToVector(std::vector<T>& to, std::array<T, size> from) {
+    to.insert(to.end(), from.cbegin(), from.cend());
+}
 
 void printByteBuffer(const char* buffer, size_t n);
 void printByteBuffer(const std::vector<char> buffer);
