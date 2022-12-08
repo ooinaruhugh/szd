@@ -13,3 +13,6 @@ It's plain, there are no flags. Just do
 ```
 szd target source
 ```
+# License
+
+The MIT License (MIT) 2022 - [Kamillo Ferry](https://github.com/ooinaruhugh/). Please have a look at the [LICENSE](LICENSE) for more details.
