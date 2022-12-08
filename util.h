@@ -12,25 +12,25 @@ using WORD = uint16_t;
 using DWORD = uint32_t;
 using QWORD = uint64_t;
 
-inline WORD readWordLE(const unsigned char* bytes) {
+inline WORD getWordLE(const unsigned char* bytes) {
     return ((WORD)bytes[1] << 8) | ((WORD)bytes[0]);
 }
 
-inline std::array<char, sizeof(WORD)> writeWordLE(WORD bytes) {
+inline std::array<char, sizeof(WORD)> putWordLE(WORD bytes) {
     return {
         (char)(bytes & 0xFF),
         (char)((bytes & 0xFF00) >> 8)
     };
 }
 
-inline DWORD readDWordLE(const unsigned char* bytes) {
+inline DWORD getDWordLE(const unsigned char* bytes) {
     return ((DWORD)bytes[3] << 24) 
            | ((DWORD)bytes[2] << 16) 
            | ((DWORD)bytes[1] << 8) 
            | ((DWORD)bytes[0]);
 }
 
-inline std::array<char, sizeof(DWORD)> writeDWordLE(DWORD bytes) {
+inline std::array<char, sizeof(DWORD)> putDWordLE(DWORD bytes) {
     return {
         (char)(bytes & 0xFF),
         (char)((bytes & 0xFF00) >> 8),
@@ -39,7 +39,7 @@ inline std::array<char, sizeof(DWORD)> writeDWordLE(DWORD bytes) {
     };
 }
 
-inline QWORD readQWordLE(const unsigned char* bytes) {
+inline QWORD getQWordLE(const unsigned char* bytes) {
     return ((QWORD)bytes[7] << 56)
            | ((QWORD)bytes[6] << 48) 
            | ((QWORD)bytes[5] << 40) 
