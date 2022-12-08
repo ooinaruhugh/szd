@@ -4,6 +4,9 @@
 
 #include "zip/zip.h"
 
+const size_t blockSize = 4096;
+char buffer[blockSize];
+
 int main(int argc, char const ** argv) {
     using namespace std;
     if (!(argc > 1)) {
@@ -12,8 +15,8 @@ int main(int argc, char const ** argv) {
     }
 
     ZipFile zipfile{argv[1]};
-    ifstream mainfile{"test.app", std::ifstream::ate | std::ifstream::binary};
-    std::ofstream output{"output", std::ofstream::binary};
+    ifstream mainfile{"test.app",mainfile.ate | mainfile.binary};
+    std::ofstream output{"output", output.binary};
 
     auto eomainfile = mainfile.tellg();
     auto eocdrPos   = zipfile.findEOCDR();
@@ -40,24 +43,45 @@ int main(int argc, char const ** argv) {
             cout << entry.localHeader << endl;
         }
 
-        // mainfile.seekg(0);
-        // output << mainfile.rdbuf();
+        mainfile.seekg(0);
+        output << mainfile.rdbuf();
 
         // TODO: Write out all the local file headers plus data payloads (the ones that we've collected)
-        // vector<char> buffer;
-        // for (auto header : localHeaders) {
-        //     output.write(reinterpret_cast<const char*>(&localHeaderMagic), sizeof(localHeaderMagic));
-        //     output.write(header.getAsByteArray().data(), localHeaderSize-4);
-        //     output.write(header.filename.data(), header.filenameLength);
-        //     output.write(header.extra.data(), header.extraLength);
+        for (auto entry : entries) {
+            auto header = entry.localHeader;
 
-        //     // auto compressedData= zipfile.copyDataAt(header.cdr->relOffset, header.compressedSize);
-        //     // output.write(compressedData.data(), header.compressedSize);
-        // }
+            output.write(reinterpret_cast<const char*>(&localHeaderMagic), sizeof(localHeaderMagic));
+            output.write(header.getAsByteArray().data(), localHeaderSize-4);
+            output.write(header.filename.data(), header.filenameLength);
+            output.write(header.extra.data(), header.extraLength);
+            
+            zipfile.copyNTo(output, header.compressedSize, buffer, blockSize);
+        }
         
         // TODO: Write archive extra data if there's any
         // TODO: Write CDR
+        for (auto entry : entries) {
+            auto cdr = entry.cdr;
+
+            cdr.relOffset += eomainfile;
+            
+            cout << cdr << endl;
+
+            output.write(reinterpret_cast<const char*>(&cdrMagic), sizeof(cdrMagic));
+            output.write(cdr.getAsByteArray().data(), cdrSize-4);
+            output.write(cdr.filename.data(), cdr.filenameLength);
+            output.write(cdr.extra.data(), cdr.extraLength);
+            output.write(cdr.comment.data(), cdr.commentLength);
+        }
         // TODO: Write EOCDR
+
+        cout << "Old EOCDR" << endl << eocdr << endl;
+        eocdr.startOfCDR += eomainfile;
+        cout << "New EOCDR" << endl << eocdr;
+
+        output.write(reinterpret_cast<const char*>(&eocdrMagic), sizeof(eocdrMagic));
+        output.write(eocdr.getAsByteArray().data(), eocdrSize-4);
+        output.write(eocdr.comment.data(), eocdr.commentSize);
     } else {
         cout << "The given file is not a zipfile." << endl;
     }

@@ -1,6 +1,8 @@
 #include <cinttypes>
 #include <vector>
 #include <cstddef>
+#include <iostream>
+#include <fstream>
 
 #ifndef _UTIL_H
 #define _UTIL_H
@@ -52,6 +54,18 @@ template<typename T>
 inline void appendVectorToVector(std::vector<T>& to, std::vector<T> from) {
     to.insert(to.end(), from.cbegin(), from.cend());
 }
+
+// void copyN(std::ifstream& infile, std::ofstream& outfile, size_t n, char* buffer, size_t n_buffer) {
+//     while (n > n_buffer) {
+//         infile.read(buffer, n_buffer);
+//         outfile.write(buffer, n_buffer);
+
+//         n -= n_buffer;
+//     } if (n > 0) {
+//         infile.read(buffer, n);
+//         outfile.write(buffer, n);
+//     }
+// }
 
 void printByteBuffer(const char* buffer, size_t n);
 void printByteBuffer(const std::vector<char> buffer);

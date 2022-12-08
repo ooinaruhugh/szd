@@ -28,6 +28,8 @@ using EOCDR = struct EOCDR {
     DWORD startOfCDR;
     WORD commentSize;
     std::vector<char> comment;
+    
+    std::vector<char> getAsByteArray();
 };
 
 const size_t eocdr64Size = 22;
@@ -72,6 +74,8 @@ using CDR = struct CDR {
     std::vector<char> filename;
     std::vector<char> extra;
     std::vector<char> comment;
+
+    std::vector<char> getAsByteArray();
 };
 
 const size_t localHeaderSize = 30;
@@ -116,7 +120,9 @@ using DigitalSignature = struct DigitalSignature {
 
 using ZipEntry = struct ZipEntry {
     LocalHeader localHeader;
+    // EncryptionHeader crypt;
     CDR cdr;
+    DataDescriptor dd;
 
     ZipEntry(LocalHeader localHeader, CDR cdr) { 
         this->localHeader = localHeader;
@@ -131,9 +137,19 @@ class ZipFile {
     bool hasEocdr = false;
     EOCDR eocdr;
 
+    bool hasEocdr64 = false;
+    bool hasEocdr64Loc = false;
+    EOCDR64 eocdr64;
+    EOCDR64Locator eocdr64Locator;
+
+
     bool hasEntries = false;
     std::vector<ZipEntry> entries;
-    
+
+    // ArchiveDecryptionHeader crypt;
+    bool hasExtra = false;
+    ArchiveExtra extra;
+
     std::ifstream file;
 
     public:
@@ -148,6 +164,7 @@ class ZipFile {
         std::vector<ZipEntry> getZipEntries(std::vector<CDR> cdrs);
 
         std::vector<char> copyDataAt(std::streampos at, size_t n);
+        void copyNTo(std::ofstream& outfile, size_t n, char* buffer, size_t n_buffer);
 };
 
 std::ostream& operator<< (std::ostream& os, EOCDR eocdr);
