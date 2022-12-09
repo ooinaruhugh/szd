@@ -38,6 +38,8 @@ int main(int argc, char const ** argv) {
         mainfile.seekg(0);
         output << mainfile.rdbuf();
 
+        zipfile.updateOffsets(eomainfile);
+
         // Write out all the local file headers plus data payloads (the ones that we've collected)
         for (auto entry : entries) {
             auto header = entry.localHeader;
@@ -52,11 +54,8 @@ int main(int argc, char const ** argv) {
         
         // TODO: Write archive extra data if there's any
         // Write updated CDR
-        for (auto entry : entries) {
-            auto cdr = entry.cdr;
-
-            cdr.relOffset += eomainfile;
-
+        for (auto cdr : zipfile.readCDRs()) {
+            cout << cdr << endl;
             output.write(reinterpret_cast<const char*>(&cdrMagic), sizeof(cdrMagic));
             output.write(cdr.getAsByteArray().data(), cdrSize-4);
             output.write(cdr.filename.data(), cdr.filenameLength);
@@ -65,8 +64,8 @@ int main(int argc, char const ** argv) {
         }
 
         // Write updated EOCDR
-        eocdr.startOfCDR += eomainfile;
-
+        eocdr = zipfile.readEOCDR();
+        cout << eocdr << endl;
         output.write(reinterpret_cast<const char*>(&eocdrMagic), sizeof(eocdrMagic));
         output.write(eocdr.getAsByteArray().data(), eocdrSize-4);
         output.write(eocdr.comment.data(), eocdr.commentSize);

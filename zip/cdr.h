@@ -30,5 +30,6 @@ using CDR = struct CDR {
     std::vector<char> getAsByteArray();
 };
 
+std::ostream& operator<< (std::ostream& os, CDR record);
 
 #endif // _CDR_H

@@ -41,8 +41,6 @@ std::streampos ZipFile::findEOCDR() {
 }
 
 EOCDR ZipFile::readEOCDR(std::streampos at) {
-    if (this->hasEocdr) return this->eocdr;
-
     unsigned char buffer[eocdrSize];
     this->file.clear();
     this->file.seekg(at, std::ios_base::beg);
@@ -73,13 +71,25 @@ EOCDR ZipFile::readEOCDR(std::streampos at) {
     return eocdr;
 }
 
+EOCDR ZipFile::readEOCDR() {
+    if (this->hasEocdr) return this->eocdr;
+    else if (this->hasEocdrPos) return this->readEOCDR(this->eocdrPos);
+    else {
+        auto at = this->eocdrPos;
+        if (at == -1) {
+            throw std::invalid_argument("The given file is not a zipfile.");
+        }
+
+        return this->readEOCDR(at);
+    }
+}
+
 std::vector<CDR> ZipFile::readCDRs(std::streampos beginAt, WORD noOfRecords) {
     unsigned char buffer[cdrSize];
 
     this->file.clear();
     this->file.seekg(beginAt, std::ios_base::beg);
 
-    std::vector<CDR> cdr;
     while (noOfRecords > 0) {
         auto at = this->file.tellg();
         this->file.read(reinterpret_cast<char*>(buffer), cdrSize);
@@ -119,12 +129,18 @@ std::vector<CDR> ZipFile::readCDRs(std::streampos beginAt, WORD noOfRecords) {
         record.comment.resize(record.commentLength);
         this->file.read(record.comment.data(), record.commentLength);
 
-        cdr.emplace_back(record);
+        this->cdr.emplace_back(record);
 
         noOfRecords--;
     } 
 
-    return cdr;
+    this->hasCDR = true;
+
+    return this->cdr;
+}
+
+std::vector<CDR> ZipFile::readCDRs() {
+    return this->cdr;
 }
 
 
@@ -151,4 +167,12 @@ void ZipFile::copyNBytesTo(std::ofstream& outfile, size_t n, char* buffer, size_
         this->file.read(buffer, n);
         outfile.write(buffer, n);
     }
+}
+
+void ZipFile::updateOffsets(std::streamoff offset) {
+    for (auto& cdr : this->cdr) {
+        cdr.relOffset += offset;
+    }
+
+    eocdr.startOfCDR += offset;
 }

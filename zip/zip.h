@@ -51,6 +51,8 @@ using ZipEntry = struct ZipEntry {
 };
 
 class ZipFile {
+    std::ifstream file;
+    
     bool hasEocdrPos = false;
     std::streampos eocdrPos;
 
@@ -72,7 +74,6 @@ class ZipFile {
     bool hasExtra = false;
     ArchiveExtra extra;
 
-    std::ifstream file;
 
     public:
         ZipFile(const char *filename);
@@ -81,15 +82,31 @@ class ZipFile {
             Find the position of the end-of-central directory record at the end of the zip file.
         */
         std::streampos findEOCDR();
+        /* 
+            Reads the end-of-central directory record at the specified position, 
+            if there is one.
+        */
         EOCDR readEOCDR(std::streampos at);
+        /*
+            Either gets the currently retained end-of-central directory record 
+            or reads the end-of-central directory record from the file
+            if there's nothing in memory.
+        */
+        EOCDR readEOCDR();
 
         /*
-            Gets all central directory entries.
+            Gets all central directory entries from the file. 
+            Replaces the currently retained central directory entries.
         */
         std::vector<CDR> readCDRs(std::streampos beginAt, WORD noOfRecords);
+        /*
+            Gets all central directory entries currently in memory. 
+        */
+        std::vector<CDR> readCDRs();
 
         /*
-            Gets all zip entries with their associated headers and data.
+            Gets all zip entries with their associated headers and data from the file
+            as specified by the central directory records in cdrs.
         */
         std::vector<ZipEntry> getZipEntries(std::vector<CDR> cdrs);
 
@@ -98,10 +115,12 @@ class ZipFile {
             a buffer of size n_buffer.
         */
         void copyNBytesTo(std::ofstream& outfile, size_t n, char* buffer, size_t n_buffer);
-};
 
-std::ostream& operator<< (std::ostream& os, EOCDR eocdr);
-std::ostream& operator<< (std::ostream& os, CDR record);
-std::ostream& operator<< (std::ostream& os, LocalHeader record);
+        /*
+            Updates all offsets relative to the beginning of the current zipfile 
+            by offset. 
+        */
+        void updateOffsets(std::streamoff offset);
+};
 
 #endif // _ZIP_H

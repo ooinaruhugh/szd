@@ -42,4 +42,6 @@ using EOCDR64Locator = struct EOCDR64Locator {
     DWORD numOfDisk;
 };
 
+std::ostream& operator<< (std::ostream& os, EOCDR eocdr);
+
 #endif // _EOCDR_H

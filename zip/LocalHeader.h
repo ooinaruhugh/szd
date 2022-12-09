@@ -20,10 +20,14 @@ using LocalHeader = struct LocalHeader {
     WORD extraLength;
     std::vector<char> filename;
     std::vector<char> extra;
+
+    // The position of the data in the zipfile. This is not part of the original header.
     std::streampos data;
 
     std::vector<char> getAsByteArray();
     static LocalHeader readLocalHeader(std::ifstream& file, std::streampos at);
 };
+
+std::ostream& operator<< (std::ostream& os, LocalHeader record);
 
 #endif // _LOCALHEADER_H
