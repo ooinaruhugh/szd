@@ -6,6 +6,8 @@ void printByteBuffer(const std::vector<char> buffer) {
     for (unsigned char c : buffer) {
 	auto f{std::cout.flags()};
 
+        // Writing '+c' seems to promote a char to an integer,
+        // so it actually gets printed as a hex instead of gibberish.
         std::cout << std::setfill('0') << std::setw(2) << std::hex << +c << ' ';
             
         std::cout.flags(f);
