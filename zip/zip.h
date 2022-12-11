@@ -103,6 +103,12 @@ class ZipFile {
         */
         void copyNBytesTo(std::ofstream& outfile, size_t n, char* buffer, size_t n_buffer);
 
+        /* 
+            Copies n bytes from the input file at the given offset to the output file using
+            a buffer of size n_buffer.
+        */
+        void copyNBytesAtTo(std::ofstream& outfile, std::streampos at, size_t n, char* buffer, size_t n_buffer);
+
         /*
             Updates all offsets relative to the beginning of the current zipfile 
             by offset. 

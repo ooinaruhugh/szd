@@ -151,6 +151,11 @@ void ZipFile::copyNBytesTo(std::ofstream& outfile, size_t n, char* buffer, size_
     }
 }
 
+void ZipFile::copyNBytesAtTo(std::ofstream& outfile, std::streampos at, size_t n, char* buffer, size_t n_buffer) {
+    file.seekg(at);
+    copyNBytesTo(outfile, n, buffer, n_buffer);
+}
+
 void ZipFile::updateOffsets(std::streamoff offset) {
     for (auto& cdr : this->cdr) {
         cdr.relOffset += offset;
