@@ -6,14 +6,21 @@
 #include "zip.h"
 
 ZipFile::ZipFile(const char *filename) {
-    this->file = std::ifstream(filename, std::ifstream::ate | std::ifstream::binary);
+    file = std::ifstream(filename, std::ifstream::ate | std::ifstream::binary);
+
+    // TODO: Handle file errors
+    eocdrPos = findEOCDR();
+    // TODO: Handle "no eocdr at all"
+    eocdr = readEOCDR(eocdrPos);
+    // TODO: Handle "bad eocdr" and to what extent
+    cdr = readCDRs(eocdr.startOfCDR, eocdr.currentDiskEntriesTotal);
+    // TODO: Are there any errors to handle?
+    entries = getZipEntries(cdr);
 }
 
 std::streampos ZipFile::findEOCDR() {
-    if (this->hasEocdrPos) return this->eocdrPos;
-
     // TODO Handle random occurences of 0x06054B50 https://stackoverflow.com/questions/8593904/how-to-find-the-position-of-central-directory-in-a-zip-file)
-    std::streampos central_directory = this->file.tellg();;
+    std::streampos central_directory = file.tellg();;
     
     const int readBufferSize = 512;
     std::array<char,readBufferSize> searchBuffer;
@@ -27,24 +34,21 @@ std::streampos ZipFile::findEOCDR() {
         else 
             central_directory = 0;
         
-        this->file.seekg(central_directory);
+        file.seekg(central_directory);
 
-        this->file.read(searchBuffer.data(), readBufferSize);
+        file.read(searchBuffer.data(), readBufferSize);
 
         needle = (char*)memmem(searchBuffer.data(), readBufferSize, &eocdrMagic, 4);
     } while ((central_directory > 0) && needle == nullptr);
     
-    this->eocdrPos = needle ? central_directory + (needle - searchBuffer.data()) : std::streampos(-1);
-    this->hasEocdrPos = true;
-
-    return this->eocdrPos;
+    return needle ? central_directory + (needle - searchBuffer.data()) : std::streampos(-1);
 }
 
 EOCDR ZipFile::readEOCDR(std::streampos at) {
     unsigned char buffer[eocdrSize];
-    this->file.clear();
-    this->file.seekg(at, std::ios_base::beg);
-    this->file.read(reinterpret_cast<char*>(buffer), eocdrSize);
+    file.clear();
+    file.seekg(at, std::ios_base::beg);
+    file.read(reinterpret_cast<char*>(buffer), eocdrSize);
 
     if (getDWordLE(buffer) != eocdrMagic) {
         throw std::invalid_argument("Specified streampos doesn't point to an end of central directory record.");
@@ -62,37 +66,21 @@ EOCDR ZipFile::readEOCDR(std::streampos at) {
 
     if (eocdr.commentSize > 0) {
         eocdr.comment.resize(eocdr.commentSize);
-        this->file.read(eocdr.comment.data(), eocdr.commentSize);
+        file.read(eocdr.comment.data(), eocdr.commentSize);
     }
-
-    this->eocdr = eocdr;
-    this->hasEocdr = true;
 
     return eocdr;
-}
-
-EOCDR ZipFile::readEOCDR() {
-    if (this->hasEocdr) return this->eocdr;
-    else if (this->hasEocdrPos) return this->readEOCDR(this->eocdrPos);
-    else {
-        auto at = this->eocdrPos;
-        if (at == -1) {
-            throw std::invalid_argument("The given file is not a zipfile.");
-        }
-
-        return this->readEOCDR(at);
-    }
 }
 
 std::vector<CDR> ZipFile::readCDRs(std::streampos beginAt, WORD noOfRecords) {
     unsigned char buffer[cdrSize];
 
-    this->file.clear();
-    this->file.seekg(beginAt, std::ios_base::beg);
+    file.clear();
+    file.seekg(beginAt, std::ios_base::beg);
 
     while (noOfRecords > 0) {
-        auto at = this->file.tellg();
-        this->file.read(reinterpret_cast<char*>(buffer), cdrSize);
+        auto at = file.tellg();
+        file.read(reinterpret_cast<char*>(buffer), cdrSize);
 
         if (getDWordLE(buffer) != cdrMagic) {
             std::stringstream errMsg;
@@ -121,35 +109,29 @@ std::vector<CDR> ZipFile::readCDRs(std::streampos beginAt, WORD noOfRecords) {
         };
 
         record.filename.resize(record.filenameLength);
-        this->file.read(record.filename.data(), record.filenameLength);
+        file.read(record.filename.data(), record.filenameLength);
 
         record.extra.resize(record.extraLength);
-        this->file.read(record.extra.data(), record.extraLength);
+        file.read(record.extra.data(), record.extraLength);
 
         record.comment.resize(record.commentLength);
-        this->file.read(record.comment.data(), record.commentLength);
+        file.read(record.comment.data(), record.commentLength);
 
-        this->cdr.emplace_back(record);
+        cdr.emplace_back(record);
 
         noOfRecords--;
     } 
 
-    this->hasCDR = true;
+    return cdr;
 
-    return this->cdr;
 }
-
-std::vector<CDR> ZipFile::readCDRs() {
-    return this->cdr;
-}
-
 
 std::vector<ZipEntry> ZipFile::getZipEntries(std::vector<CDR> cdrs) {
     using namespace std;
     std::vector<ZipEntry> entries;
 
     for (auto cdr : cdrs) {
-        auto localHeader = LocalHeader::readLocalHeader(this->file, cdr.relOffset);
+        auto localHeader = LocalHeader::readLocalHeader(file, cdr.relOffset);
 
         entries.emplace_back(localHeader, cdr);
     }
@@ -159,12 +141,12 @@ std::vector<ZipEntry> ZipFile::getZipEntries(std::vector<CDR> cdrs) {
 
 void ZipFile::copyNBytesTo(std::ofstream& outfile, size_t n, char* buffer, size_t n_buffer) {
     while (n > n_buffer) {
-        this->file.read(buffer, n_buffer);
+        file.read(buffer, n_buffer);
         outfile.write(buffer, n_buffer);
 
         n -= n_buffer;
     } if (n > 0) {
-        this->file.read(buffer, n);
+        file.read(buffer, n);
         outfile.write(buffer, n);
     }
 }
@@ -176,3 +158,19 @@ void ZipFile::updateOffsets(std::streamoff offset) {
 
     eocdr.startOfCDR += offset;
 }
+
+// std::ostream& operator<< (std::ostream& os, ZipFile zipfile) {
+
+//     for (auto entry : zipfile.entries) {
+//             auto header = entry.localHeader;
+
+//             output.write(reinterpret_cast<const char*>(&localHeaderMagic), sizeof(localHeaderMagic));
+//             output.write(header.getAsByteArray().data(), localHeaderSize-4);
+//             output.write(header.filename.data(), header.filenameLength);
+//             output.write(header.extra.data(), header.extraLength);
+            
+//             zipfile.copyNBytesTo(output, header.compressedSize, buffer, blockSize);
+//     }
+
+//     return os;
+// }

@@ -51,31 +51,24 @@ using ZipEntry = struct ZipEntry {
 };
 
 class ZipFile {
-    std::ifstream file;
-    
-    bool hasEocdrPos = false;
-    std::streampos eocdrPos;
-
-    bool hasEocdr = false;
-    EOCDR eocdr;
-
-    bool hasEocdr64 = false;
-    bool hasEocdr64Loc = false;
-    EOCDR64 eocdr64;
-    EOCDR64Locator eocdr64Locator;
-
-    bool hasCDR = false;
-    std::vector<CDR> cdr;
-
-    bool hasEntries = false;
-    std::vector<ZipEntry> entries;
-
-    // ArchiveDecryptionHeader crypt;
-    bool hasExtra = false;
-    ArchiveExtra extra;
-
-
+        std::ifstream file;
     public:
+        std::streampos eocdrPos;
+        EOCDR eocdr;
+
+        EOCDR64 eocdr64;
+        EOCDR64Locator eocdr64Locator;
+
+        bool hasCDR = false;
+        std::vector<CDR> cdr;
+
+        bool hasEntries = false;
+        std::vector<ZipEntry> entries;
+
+        // ArchiveDecryptionHeader crypt;
+        bool hasExtra = false;
+        ArchiveExtra extra;
+
         ZipFile(const char *filename);
 
         /*
@@ -87,12 +80,6 @@ class ZipFile {
             if there is one.
         */
         EOCDR readEOCDR(std::streampos at);
-        /*
-            Either gets the currently retained end-of-central directory record 
-            or reads the end-of-central directory record from the file
-            if there's nothing in memory.
-        */
-        EOCDR readEOCDR();
 
         /*
             Gets all central directory entries from the file. 
@@ -122,5 +109,7 @@ class ZipFile {
         */
         void updateOffsets(std::streamoff offset);
 };
+
+std::ostream& operator<< (std::ostream& os, ZipFile zipfile);
 
 #endif // _ZIP_H

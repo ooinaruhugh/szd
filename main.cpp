@@ -24,24 +24,15 @@ int main(int argc, char const ** argv) {
     ofstream output{outfileName.str(), output.binary};
 
     auto eomainfile = mainfile.tellg();
-    auto eocdrPos   = zipfile.findEOCDR();
 
-    if (eocdrPos != std::streampos(-1)) {
-        auto eocdr = zipfile.readEOCDR(eocdrPos);
-
-        // Build the central directory from the information in the eocdr
-        auto cdr = zipfile.readCDRs(eocdr.startOfCDR, eocdr.currentDiskEntriesTotal);
-        
-        // TODO: Fetch all the local file headers (probably only the ones given by the cdrs we've collected)
-        auto entries = zipfile.getZipEntries(cdr);
-
+    if (zipfile.eocdrPos != std::streampos(-1)) {
         mainfile.seekg(0);
         output << mainfile.rdbuf();
 
         zipfile.updateOffsets(eomainfile);
 
         // Write out all the local file headers plus data payloads (the ones that we've collected)
-        for (auto entry : entries) {
+        for (auto entry : zipfile.entries) {
             auto header = entry.localHeader;
 
             output.write(reinterpret_cast<const char*>(&localHeaderMagic), sizeof(localHeaderMagic));
@@ -54,8 +45,7 @@ int main(int argc, char const ** argv) {
         
         // TODO: Write archive extra data if there's any
         // Write updated CDR
-        for (auto cdr : zipfile.readCDRs()) {
-            cout << cdr << endl;
+        for (auto cdr : zipfile.cdr) {
             output.write(reinterpret_cast<const char*>(&cdrMagic), sizeof(cdrMagic));
             output.write(cdr.getAsByteArray().data(), cdrSize-4);
             output.write(cdr.filename.data(), cdr.filenameLength);
@@ -64,11 +54,9 @@ int main(int argc, char const ** argv) {
         }
 
         // Write updated EOCDR
-        eocdr = zipfile.readEOCDR();
-        cout << eocdr << endl;
         output.write(reinterpret_cast<const char*>(&eocdrMagic), sizeof(eocdrMagic));
-        output.write(eocdr.getAsByteArray().data(), eocdrSize-4);
-        output.write(eocdr.comment.data(), eocdr.commentSize);
+        output.write(zipfile.eocdr.getAsByteArray().data(), eocdrSize-4);
+        output.write(zipfile.eocdr.comment.data(), zipfile.eocdr.commentSize);
     } else {
         cout << "The given file is not a zipfile." << endl;
     }
