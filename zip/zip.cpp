@@ -5,8 +5,10 @@
 
 #include "zip.h"
 
+using namespace std;
+
 ZipFile::ZipFile(const char *filename) {
-    file = std::ifstream(filename, std::ifstream::ate | std::ifstream::binary);
+    file = make_shared<ifstream>(filename, ifstream::ate | ifstream::binary);
 
     // TODO: Handle file errors
     eocdrPos = findEOCDR();
@@ -18,9 +20,13 @@ ZipFile::ZipFile(const char *filename) {
     entries = getZipEntries(cdr);
 }
 
+// ZipFile::ZipFile(const ZipFile& zipfile) {
+
+// }
+
 std::streampos ZipFile::findEOCDR() {
     // TODO Handle random occurences of 0x06054B50 https://stackoverflow.com/questions/8593904/how-to-find-the-position-of-central-directory-in-a-zip-file)
-    std::streampos central_directory = file.tellg();;
+    std::streampos central_directory = file->tellg();;
     
     const int readBufferSize = 512;
     std::array<char,readBufferSize> searchBuffer;
@@ -34,9 +40,9 @@ std::streampos ZipFile::findEOCDR() {
         else 
             central_directory = 0;
         
-        file.seekg(central_directory);
+        file->seekg(central_directory);
 
-        file.read(searchBuffer.data(), readBufferSize);
+        file->read(searchBuffer.data(), readBufferSize);
 
         needle = (char*)memmem(searchBuffer.data(), readBufferSize, &eocdrMagic, 4);
     } while ((central_directory > 0) && needle == nullptr);
@@ -46,9 +52,9 @@ std::streampos ZipFile::findEOCDR() {
 
 EOCDR ZipFile::readEOCDR(std::streampos at) {
     unsigned char buffer[eocdrSize];
-    file.clear();
-    file.seekg(at, std::ios_base::beg);
-    file.read(reinterpret_cast<char*>(buffer), eocdrSize);
+    file->clear();
+    file->seekg(at, std::ios_base::beg);
+    file->read(reinterpret_cast<char*>(buffer), eocdrSize);
 
     if (getDWordLE(buffer) != eocdrMagic) {
         throw std::invalid_argument("Specified streampos doesn't point to an end of central directory record.");
@@ -66,7 +72,7 @@ EOCDR ZipFile::readEOCDR(std::streampos at) {
 
     if (eocdr.commentSize > 0) {
         eocdr.comment.resize(eocdr.commentSize);
-        file.read(eocdr.comment.data(), eocdr.commentSize);
+        file->read(eocdr.comment.data(), eocdr.commentSize);
     }
 
     return eocdr;
@@ -75,12 +81,12 @@ EOCDR ZipFile::readEOCDR(std::streampos at) {
 std::vector<CDR> ZipFile::readCDRs(std::streampos beginAt, WORD noOfRecords) {
     unsigned char buffer[cdrSize];
 
-    file.clear();
-    file.seekg(beginAt, std::ios_base::beg);
+    file->clear();
+    file->seekg(beginAt, std::ios_base::beg);
 
     while (noOfRecords > 0) {
-        auto at = file.tellg();
-        file.read(reinterpret_cast<char*>(buffer), cdrSize);
+        auto at = file->tellg();
+        file->read(reinterpret_cast<char*>(buffer), cdrSize);
 
         if (getDWordLE(buffer) != cdrMagic) {
             std::stringstream errMsg;
@@ -109,13 +115,13 @@ std::vector<CDR> ZipFile::readCDRs(std::streampos beginAt, WORD noOfRecords) {
         };
 
         record.filename.resize(record.filenameLength);
-        file.read(record.filename.data(), record.filenameLength);
+        file->read(record.filename.data(), record.filenameLength);
 
         record.extra.resize(record.extraLength);
-        file.read(record.extra.data(), record.extraLength);
+        file->read(record.extra.data(), record.extraLength);
 
         record.comment.resize(record.commentLength);
-        file.read(record.comment.data(), record.commentLength);
+        file->read(record.comment.data(), record.commentLength);
 
         cdr.emplace_back(record);
 
@@ -131,7 +137,7 @@ std::vector<ZipEntry> ZipFile::getZipEntries(std::vector<CDR> cdrs) {
     std::vector<ZipEntry> entries;
 
     for (auto cdr : cdrs) {
-        auto localHeader = LocalHeader::readLocalHeader(file, cdr.relOffset);
+        auto localHeader = LocalHeader::readLocalHeader(*file, cdr.relOffset);
 
         entries.emplace_back(localHeader, cdr);
     }
@@ -141,41 +147,64 @@ std::vector<ZipEntry> ZipFile::getZipEntries(std::vector<CDR> cdrs) {
 
 void ZipFile::copyNBytesTo(std::ofstream& outfile, size_t n, char* buffer, size_t n_buffer) {
     while (n > n_buffer) {
-        file.read(buffer, n_buffer);
+        file->read(buffer, n_buffer);
         outfile.write(buffer, n_buffer);
 
         n -= n_buffer;
     } if (n > 0) {
-        file.read(buffer, n);
+        file->read(buffer, n);
         outfile.write(buffer, n);
     }
 }
 
 void ZipFile::copyNBytesAtTo(std::ofstream& outfile, std::streampos at, size_t n, char* buffer, size_t n_buffer) {
-    file.seekg(at);
+    file->seekg(at);
     copyNBytesTo(outfile, n, buffer, n_buffer);
 }
 
-void ZipFile::updateOffsets(std::streamoff offset) {
-    for (auto& cdr : this->cdr) {
-        cdr.relOffset += offset;
+std::ofstream& operator<< (std::ofstream& os, ZipFile zipfile) {
+    const size_t blockSize = 4096;
+    // Buffer for copying unchanged file contents
+    char buffer[blockSize];
+
+    auto entries = zipfile.entries;
+
+    // Write out all the local file headers plus data payloads (the ones that we've collected)
+    for (auto& entry : entries) {
+            auto header = entry.localHeader;
+
+            auto pos = os.tellp();
+            entry.cdr.relOffset = pos;
+
+            os.write(reinterpret_cast<const char*>(&localHeaderMagic), sizeof(localHeaderMagic));
+            os.write(header.getAsByteArray().data(), localHeaderSize-4);
+            os.write(header.filename.data(), header.filenameLength);
+            os.write(header.extra.data(), header.extraLength);
+            
+            zipfile.copyNBytesTo(os, header.compressedSize, buffer, blockSize);
     }
 
-    eocdr.startOfCDR += offset;
+    // TODO: Write archive extra data if there's any
+    // Write updated CDR
+
+    auto cdrPos = os.tellp();
+    for (auto entry : entries) {
+        auto cdr = entry.cdr;
+
+        os.write(reinterpret_cast<const char*>(&cdrMagic), sizeof(cdrMagic));
+        os.write(cdr.getAsByteArray().data(), cdrSize-4);
+        os.write(cdr.filename.data(), cdr.filenameLength);
+        os.write(cdr.extra.data(), cdr.extraLength);
+        os.write(cdr.comment.data(), cdr.commentLength);
+    }
+
+    zipfile.eocdr.startOfCDR = cdrPos;
+
+    // Write updated EOCDR
+    os.write(reinterpret_cast<const char*>(&eocdrMagic), sizeof(eocdrMagic));
+    os.write(zipfile.eocdr.getAsByteArray().data(), eocdrSize-4);
+    if (zipfile.eocdr.commentSize > 0) 
+        os.write(zipfile.eocdr.comment.data(), zipfile.eocdr.commentSize);
+
+    return os;
 }
-
-// std::ostream& operator<< (std::ostream& os, ZipFile zipfile) {
-
-//     for (auto entry : zipfile.entries) {
-//             auto header = entry.localHeader;
-
-//             output.write(reinterpret_cast<const char*>(&localHeaderMagic), sizeof(localHeaderMagic));
-//             output.write(header.getAsByteArray().data(), localHeaderSize-4);
-//             output.write(header.filename.data(), header.filenameLength);
-//             output.write(header.extra.data(), header.extraLength);
-            
-//             zipfile.copyNBytesTo(output, header.compressedSize, buffer, blockSize);
-//     }
-
-//     return os;
-// }

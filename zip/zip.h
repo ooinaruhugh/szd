@@ -6,6 +6,7 @@
 #include <fstream>
 #include <vector>
 #include <array>
+#include <memory>
 
 #include "../util.h"
 #include "eocdr.h"
@@ -51,7 +52,7 @@ using ZipEntry = struct ZipEntry {
 };
 
 class ZipFile {
-        std::ifstream file;
+        std::shared_ptr<std::ifstream> file;
     public:
         std::streampos eocdrPos;
         EOCDR eocdr;
@@ -59,17 +60,15 @@ class ZipFile {
         EOCDR64 eocdr64;
         EOCDR64Locator eocdr64Locator;
 
-        bool hasCDR = false;
         std::vector<CDR> cdr;
 
-        bool hasEntries = false;
         std::vector<ZipEntry> entries;
 
         // ArchiveDecryptionHeader crypt;
-        bool hasExtra = false;
         ArchiveExtra extra;
 
         ZipFile(const char *filename);
+        // ZipFile(const ZipFile& zipfile);
 
         /*
             Find the position of the end-of-central directory record at the end of the zip file.
@@ -108,14 +107,9 @@ class ZipFile {
             a buffer of size n_buffer.
         */
         void copyNBytesAtTo(std::ofstream& outfile, std::streampos at, size_t n, char* buffer, size_t n_buffer);
-
-        /*
-            Updates all offsets relative to the beginning of the current zipfile 
-            by offset. 
-        */
-        void updateOffsets(std::streamoff offset);
 };
 
-std::ostream& operator<< (std::ostream& os, ZipFile zipfile);
+// std::ostream& operator<< (std::ostream& os, ZipFile zipfile);
+std::ofstream& operator<< (std::ofstream& os, ZipFile zipfile);
 
 #endif // _ZIP_H
