@@ -29,29 +29,37 @@ int main(int argc, char const ** argv) {
         mainfile.seekg(0);
         output << mainfile.rdbuf();
 
-        zipfile.updateOffsets(eomainfile);
+        auto entries = zipfile.entries;
 
         // Write out all the local file headers plus data payloads (the ones that we've collected)
-        for (auto entry : zipfile.entries) {
-            auto header = entry.localHeader;
+        for (auto& entry : entries) {
+                auto header = entry.localHeader;
 
-            output.write(reinterpret_cast<const char*>(&localHeaderMagic), sizeof(localHeaderMagic));
-            output.write(header.getAsByteArray().data(), localHeaderSize-4);
-            output.write(header.filename.data(), header.filenameLength);
-            output.write(header.extra.data(), header.extraLength);
-            
-            zipfile.copyNBytesTo(output, header.compressedSize, buffer, blockSize);
+                auto pos = output.tellp();
+                entry.cdr.relOffset = pos;
+
+                output.write(reinterpret_cast<const char*>(&localHeaderMagic), sizeof(localHeaderMagic));
+                output.write(header.getAsByteArray().data(), localHeaderSize-4);
+                output.write(header.filename.data(), header.filenameLength);
+                output.write(header.extra.data(), header.extraLength);
+                
+                zipfile.copyNBytesTo(output, header.compressedSize, buffer, blockSize);
         }
-        
+
         // TODO: Write archive extra data if there's any
         // Write updated CDR
-        for (auto cdr : zipfile.cdr) {
+        auto cdrPos = output.tellp();
+        for (auto entry : entries) {
+            auto cdr = entry.cdr;
+
             output.write(reinterpret_cast<const char*>(&cdrMagic), sizeof(cdrMagic));
             output.write(cdr.getAsByteArray().data(), cdrSize-4);
             output.write(cdr.filename.data(), cdr.filenameLength);
             output.write(cdr.extra.data(), cdr.extraLength);
             output.write(cdr.comment.data(), cdr.commentLength);
         }
+
+        zipfile.eocdr.startOfCDR = cdrPos;
 
         // Write updated EOCDR
         output.write(reinterpret_cast<const char*>(&eocdrMagic), sizeof(eocdrMagic));
