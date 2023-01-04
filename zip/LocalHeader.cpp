@@ -3,7 +3,7 @@
 #include <fstream>
 using namespace std;
 
-std::ostream& operator<< (std::ostream& os, LocalHeader record) {
+ostream& operator<< (std::ostream& os, LocalHeader record) {
     auto f(os.flags());
 
     os << "filename: " << string(record.filename.begin(), record.filename.end()) << "🔚" << endl;
@@ -18,8 +18,8 @@ std::ostream& operator<< (std::ostream& os, LocalHeader record) {
     return os;
 }
 
-std::vector<char> LocalHeader::getAsByteArray() {
-    std::vector<char> zaBytes;
+vector<char> LocalHeader::getAsByteArray() {
+    vector<char> zaBytes;
     zaBytes.reserve(localHeaderSize);
 
     appendArrayToVector(zaBytes, putWordLE(this->versionNeeded));
@@ -36,6 +36,10 @@ std::vector<char> LocalHeader::getAsByteArray() {
     return zaBytes;
 }
 
+bool LocalHeader::hasDataDescriptor() {
+    return nthBitIsSet(generalPurpose, 3);
+}
+
 LocalHeader LocalHeader::readLocalHeader(ifstream& file, streampos at) {
     unsigned char buffer[localHeaderSize];
 
@@ -44,10 +48,10 @@ LocalHeader LocalHeader::readLocalHeader(ifstream& file, streampos at) {
     file.read(reinterpret_cast<char*>(buffer), localHeaderSize);
 
     if (getDWordLE(buffer) != localHeaderMagic) {
-        std::stringstream errMsg;
+        stringstream errMsg;
         errMsg << "Encountered a non-local header at "
                 << std::hex << at;
-        throw std::runtime_error(errMsg.str());
+        throw runtime_error(errMsg.str());
     }
 
     LocalHeader localHeader{

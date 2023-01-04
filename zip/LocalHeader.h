@@ -1,4 +1,4 @@
-#if !defined(_LOCALHEADER_H)
+#ifndef _LOCALHEADER_H
 #define _LOCALHEADER_H
 
 #include "../util.h"
@@ -24,6 +24,7 @@ using LocalHeader = struct LocalHeader {
     std::streampos data;
 
     std::vector<char> getAsByteArray();
+    bool hasDataDescriptor();
     static LocalHeader readLocalHeader(std::ifstream& file, std::streampos at);
 };
 
