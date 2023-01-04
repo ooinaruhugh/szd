@@ -16,8 +16,8 @@ using LocalHeader = struct LocalHeader {
     DWORD crc32;
     DWORD compressedSize;
     DWORD uncompressedSize;
-    WORD filenameLength;
-    WORD extraLength;
+    WORD filenameLength() { return filename.size(); }
+    WORD extraLength() { return extra.size(); }
     std::vector<char> filename;
     std::vector<char> extra;
     // The position of the data in the zipfile. This is not part of the original header.

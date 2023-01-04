@@ -43,11 +43,14 @@ using ZipEntry = struct ZipEntry {
     // EncryptionHeader crypt;
     DataDescriptor dd;
 
-    CDR cdr;
+    CDR* const cdr;
 
-    ZipEntry(LocalHeader localHeader, CDR cdr) { 
+    ZipEntry(LocalHeader localHeader, CDR &cdr) : cdr(&cdr) { 
         this->localHeader = localHeader;
-        this->cdr = cdr;
+    }
+
+    ZipEntry(LocalHeader localHeader, CDR &cdr, DataDescriptor dd) : ZipEntry(localHeader, cdr) { 
+        this->dd = dd;
     }
 };
 
@@ -74,21 +77,22 @@ class ZipFile {
             Find the position of the end-of-central directory record at the end of the zip file.
         */
         std::streampos findEOCDR();
-        /* 
-            Reads the end-of-central directory record at the specified position, 
-            if there is one.
-        */
+        std::streampos findMagic(DWORD magic);
+        std::streampos findMagicFromEnd(DWORD magic);
+
+        
+        /// @brief  Reads the end-of-central directory record at the specified position, 
+        ///         if there is one.
+        /// @param at 
+        /// @return 
         EOCDR readEOCDR(std::streampos at);
 
-        /*
-            Gets all central directory entries from the file. 
-            Replaces the currently retained central directory entries.
-        */
+        /// @brief Gets all central directory entries from the file. 
+        ///        Replaces the currently retained central directory entries.
+        /// @param beginAt 
+        /// @param noOfRecords 
+        /// @return 
         std::vector<CDR> readCDRs(std::streampos beginAt, WORD noOfRecords);
-        /*
-            Gets all central directory entries currently in memory. 
-        */
-        std::vector<CDR> readCDRs();
 
         /*
             Gets all zip entries with their associated headers and data from the file

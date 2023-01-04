@@ -1,4 +1,4 @@
-#if !defined(_CDR_H)
+#ifndef _CDR_H
 #define _CDR_H
 
 #include "../util.h"
@@ -16,9 +16,9 @@ using CDR = struct CDR {
     DWORD crc32;
     DWORD compressedSize;
     DWORD uncompressedSize;
-    WORD filenameLength;
-    WORD extraLength;
-    WORD commentLength;
+    WORD filenameLength() { return filename.size(); }
+    WORD extraLength() { return extra.size(); }
+    WORD commentLength() { return comment.size(); }
     WORD diskNoStart;
     WORD internalAttr;
     DWORD externalAttr;

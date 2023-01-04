@@ -10,9 +10,9 @@ ostream& operator<< (std::ostream& os, LocalHeader record) {
     os << "compressed (actual, right-now) size: " << hex << record.compressedSize << endl;
 
     os << "file name length:\t0x"
-       << hex << setfill('0') << std::setw(2) << record.filenameLength << endl;
+       << hex << setfill('0') << std::setw(2) << record.filenameLength() << endl;
     os << "extra field length:\t0x"
-       << record.extraLength << endl; 
+       << record.extraLength() << endl; 
 
     os.flags(f);
     return os;
@@ -30,8 +30,8 @@ vector<char> LocalHeader::getAsByteArray() {
     appendArrayToVector(zaBytes, putDWordLE(this->crc32));
     appendArrayToVector(zaBytes, putDWordLE(this->compressedSize));
     appendArrayToVector(zaBytes, putDWordLE(this->uncompressedSize));
-    appendArrayToVector(zaBytes, putWordLE(this->filenameLength));
-    appendArrayToVector(zaBytes, putWordLE(this->extraLength));
+    appendArrayToVector(zaBytes, putWordLE(this->filenameLength()));
+    appendArrayToVector(zaBytes, putWordLE(this->extraLength()));
 
     return zaBytes;
 }
@@ -62,17 +62,19 @@ LocalHeader LocalHeader::readLocalHeader(ifstream& file, streampos at) {
         .lastModDate = getWordLE(buffer+12),
         .crc32 = getDWordLE(buffer+14),
         .compressedSize = getDWordLE(buffer+18),
-        .uncompressedSize = getDWordLE(buffer+22),
-        .filenameLength = getWordLE(buffer+26),
-        .extraLength = getWordLE(buffer+28)
+        .uncompressedSize = getDWordLE(buffer+22)
     };
-    localHeader.data = file.tellg() + streamoff(localHeader.filenameLength + localHeader.extraLength);
+    
+    auto filenameLength = getWordLE(buffer+26);
+    auto extraLength = getWordLE(buffer+28);
 
-    localHeader.filename.resize(localHeader.filenameLength);
-    file.read(localHeader.filename.data(), localHeader.filenameLength);
+    localHeader.data = file.tellg() + streamoff(filenameLength + extraLength);
 
-    localHeader.extra.resize(localHeader.extraLength);
-    file.read(localHeader.extra.data(), localHeader.extraLength);
+    localHeader.filename.resize(filenameLength);
+    file.read(localHeader.filename.data(), filenameLength);
+
+    localHeader.extra.resize(extraLength);
+    file.read(localHeader.extra.data(), extraLength);
 
     return localHeader;
 }

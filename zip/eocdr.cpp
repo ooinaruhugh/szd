@@ -7,7 +7,7 @@ using namespace std;
 
 #include "eocdr.h"
 
-std::ostream& operator<< (std::ostream& os, EOCDR eocdr) {
+ostream& operator<< (ostream& os, EOCDR eocdr) {
     auto f(os.flags());
 
     os << "number of this disk:\t" 
@@ -23,8 +23,8 @@ std::ostream& operator<< (std::ostream& os, EOCDR eocdr) {
     os << "offset of start of central\ndirectory with respect to\nthe starting disk number:\t0x"
        << eocdr.startOfCDR << endl;
     os << ".ZIP file comment length:\t0x"
-       << eocdr.commentSize << endl;
-    if (eocdr.commentSize > 0) {
+       << eocdr.commentSize() << endl;
+    if (eocdr.commentSize() > 0) {
         os << ".ZIP file comment:\t"
         << string(eocdr.comment.begin(), eocdr.comment.end()) << endl;
     }
@@ -33,8 +33,8 @@ std::ostream& operator<< (std::ostream& os, EOCDR eocdr) {
     return os;
 }
 
-std::vector<char> EOCDR::getAsByteArray() {
-    std::vector<char> zaBytes;
+vector<char> EOCDR::getAsByteArray() {
+    vector<char> zaBytes;
     zaBytes.reserve(eocdrSize-4);
 
     appendArrayToVector(zaBytes, putWordLE(this->numOfDisk));
@@ -43,7 +43,7 @@ std::vector<char> EOCDR::getAsByteArray() {
     appendArrayToVector(zaBytes, putWordLE(this->entriesTotal));
     appendArrayToVector(zaBytes, putDWordLE(this->size));
     appendArrayToVector(zaBytes, putDWordLE(this->startOfCDR));
-    appendArrayToVector(zaBytes, putWordLE(this->commentSize));
+    appendArrayToVector(zaBytes, putWordLE(this->commentSize()));
 
     return zaBytes;
 }

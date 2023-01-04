@@ -1,4 +1,4 @@
-#if !defined(_EOCDR_H)
+#ifndef _EOCDR_H
 #define _EOCDR_H
 
 #include "../util.h"
@@ -15,7 +15,7 @@ using EOCDR = struct EOCDR {
     WORD entriesTotal;
     DWORD size;
     DWORD startOfCDR;
-    WORD commentSize;
+    WORD commentSize() { return comment.size(); }
     std::vector<char> comment;
     
     std::vector<char> getAsByteArray();
@@ -31,8 +31,8 @@ using EOCDR64 = struct EOCDR64 {
     QWORD currentDiskEntriesTotal;
     QWORD entriesTotal;
     QWORD startOfCDR;
-    WORD commentSize;
-    char* data;
+    WORD commentSize() { return data.size(); }
+    std::vector<char> data;
 };
 
 const size_t eocdr64locatorSize = 16;
