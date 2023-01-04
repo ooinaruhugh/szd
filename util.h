@@ -1,16 +1,20 @@
+#ifndef _UTIL_H
+#define _UTIL_H
+
 #include <cstddef>
 #include <cinttypes>
 
 #include <vector>
 #include <array>
 
-#ifndef _UTIL_H
-#define _UTIL_H
-
 using BYTE = uint8_t;
 using WORD = uint16_t;
 using DWORD = uint32_t;
 using QWORD = uint64_t;
+
+inline bool nthBitIsSet(QWORD bitfield, unsigned short bit) {
+    return bitfield & (QWORD(1) << bit);
+}
 
 /*
     Reading little-endian bytes in a host-agnostic way.
