@@ -12,10 +12,11 @@ I was like, hey, that's reasonably easy, I could try that for myself.
 So here's the probably over-engineered version, in C++, because I was in the mood to do C++ again.
 
 # Usage
-It's plain, there are no flags. Just do
+It's plain, there's one possible flag. Just do
 ```
-szd target source
+szd -o outfile target source
 ```
+
 # License
 
 The MIT License (MIT) 2022 - [Kamillo Ferry](https://github.com/ooinaruhugh/). Please have a look at the [LICENSE](LICENSE) for more details.
