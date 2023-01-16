@@ -36,10 +36,14 @@ void processZipFile(string infile, string zipfile, string outfile) {
 
 int main(int argc, char const **argv) {
     try {
-        po::options_description desc("Allowed options");
-        desc.add_options()
+        po::options_description generic("Allowed options");
+        generic.add_options()
             ("help", "print this help message")
             ("output,o", po::value<string>(), "name for output file, defaults to <infile>.new")
+        ;
+
+        po::options_description hidden("Hidden options");
+        hidden.add_options()
             ("infile", po::value< vector<string> >(), "file to append the zipfile to") 
             ("zipfile", po::value< vector<string> >(), "zipfile to be appended")
         ;
@@ -48,15 +52,20 @@ int main(int argc, char const **argv) {
         p.add("infile", 1);
         p.add("zipfile", 1);
 
+        po::options_description cmdline_options;
+        cmdline_options.add(generic).add(hidden);
+
+        po::options_description visible;
+        visible.add(generic);
 
         po::variables_map vm;
         po::store(po::command_line_parser(argc, argv)
-                                .options(desc)
+                                .options(cmdline_options)
                                 .positional(p).run(), vm);
         po::notify(vm);
 
         if (vm.count("help")) {
-            printUsage(desc);
+            printUsage(visible);
             exit(EXIT_SUCCESS);
         }
 
@@ -67,7 +76,7 @@ int main(int argc, char const **argv) {
             zipfile = vm["zipfile"].as< vector<string> >()[0];
         } else {
             cout << "Error: you have to specify an input zipfile and a input target file." << endl;
-            printUsage(desc);
+            printUsage(visible);
 
             exit(EXIT_FAILURE);
         }
