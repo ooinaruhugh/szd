@@ -19,12 +19,12 @@ void printUsage(const po::options_description &desc) {
     cerr << "Usage: szd [options] infile zipfile" << endl << desc;
 }
 
-void processZipFile(string infile, string zipfile, string outfile) {
+void processZipFile(string infilePath, string zipfilePath, string outfilePath) {
     using namespace std;
 
-    ZipFile zipf{zipfile};
-    ifstream donor{infile, donor.ate | donor.binary};
-    ofstream outf{outfile, outf.binary};
+    ZipFile zipf{zipfilePath};
+    ifstream donor{infilePath, donor.ate | donor.binary};
+    ofstream outf{outfilePath, outf.binary};
 
     auto endOfDonor = donor.tellg();
 
