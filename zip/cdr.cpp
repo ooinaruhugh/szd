@@ -3,7 +3,7 @@
 #include "cdr.h"
 using namespace std;
 
-ostream& operator<< (ostream& os, CDR record) {
+ostream& operator<<(ostream& os, CDR record) {
     auto f(os.flags());
 
     os << "filename: " << string(record.filename.begin(), record.filename.end()) << "🔚" << endl;

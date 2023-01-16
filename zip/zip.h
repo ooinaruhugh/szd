@@ -71,6 +71,7 @@ class ZipFile {
         ArchiveExtra extra;
 
         ZipFile(const char *filename);
+        ZipFile(const std::string &filename);
         // ZipFile(const ZipFile& zipfile);
 
         /*

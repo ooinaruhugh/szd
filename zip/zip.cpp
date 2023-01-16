@@ -26,9 +26,7 @@ ZipFile::ZipFile(const char *filename) {
     entries = getZipEntries(cdr);
 }
 
-// ZipFile::ZipFile(const ZipFile& zipfile) {
-
-// }
+ZipFile::ZipFile(const string& zipfile) : ZipFile::ZipFile(zipfile.data()) {}
 
 streampos ZipFile::findEOCDR() {
     // TODO Handle random occurences of 0x06054B50 https://stackoverflow.com/questions/8593904/how-to-find-the-position-of-central-directory-in-a-zip-file)

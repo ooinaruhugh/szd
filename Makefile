@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-I.
+CXXFLAGS=-I. -lboost_program_options
 # CXXFLAGS=-I. -g
 INCLUDES=
 DEPS = util.h zip/zip.h zip/cdr.h zip/eocdr.h zip/LocalHeader.h
