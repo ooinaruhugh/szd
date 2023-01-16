@@ -61,7 +61,7 @@ EOCDR ZipFile::readEOCDR(streampos at) {
     file->read(reinterpret_cast<char*>(buffer), eocdrSize);
 
     if (getDWordLE(buffer) != eocdrMagic) {
-        throw invalid_argument("Specified streampos doesn't point to an end of central directory record.");
+        throw invalid_argument("There is not an end of central directory record at the specified position.");
     }
 
     EOCDR eocdr{

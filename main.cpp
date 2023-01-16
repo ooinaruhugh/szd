@@ -16,7 +16,7 @@ const size_t blockSize = 4096;
 char buffer[blockSize];
 
 void printUsage(const po::options_description &desc) {
-    cout << "Usage: szd [options] infile zipfile" << endl << desc;
+    cerr << "Usage: szd [options] infile zipfile" << endl << desc;
 }
 
 void processZipFile(string infile, string zipfile, string outfile) {
@@ -75,7 +75,7 @@ int main(int argc, char const **argv) {
             infile  = vm["infile"].as< vector<string> >()[0];
             zipfile = vm["zipfile"].as< vector<string> >()[0];
         } else {
-            cout << "Error: you have to specify an input zipfile and a input target file." << endl;
+            cerr << "Error: you have to specify an input zipfile and a input target file." << endl;
             printUsage(visible);
 
             exit(EXIT_FAILURE);
@@ -92,7 +92,7 @@ int main(int argc, char const **argv) {
 
         exit(EXIT_SUCCESS);
     } catch (exception e) {
-        cout << e.what() << endl;
+        cout << "error: " << e.what() << endl;
         exit(EXIT_FAILURE);
     }
 }
