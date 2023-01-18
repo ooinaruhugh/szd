@@ -8,7 +8,7 @@ using namespace std;
 #include "eocdr.h"
 
 ostream& operator<< (ostream& os, EOCDR eocdr) {
-    auto f(os.flags());
+    auto f{os.flags()};
 
     os << "number of this disk:\t" 
        << dec << eocdr.numOfDisk << endl;

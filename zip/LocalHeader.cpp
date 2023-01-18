@@ -4,7 +4,7 @@
 using namespace std;
 
 ostream& operator<< (std::ostream& os, LocalHeader record) {
-    auto f(os.flags());
+    auto f{os.flags()};
 
     os << "filename: " << string(record.filename.begin(), record.filename.end()) << "🔚" << endl;
     os << "compressed (actual, right-now) size: " << hex << record.compressedSize << endl;
