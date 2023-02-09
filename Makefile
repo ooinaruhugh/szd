@@ -1,5 +1,5 @@
-CXX=g++
-CXXFLAGS=-I. -lboost_program_options
+CXX=clang++
+CXXFLAGS=-I.
 # CXXFLAGS=-I. -g
 INCLUDES=
 DEPS = util.h zip/zip.h zip/cdr.h zip/eocdr.h zip/LocalHeader.h
@@ -18,7 +18,7 @@ else
 endif
 
 main: $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(MAINNAME) $(OBJS)
+	$(CXX) $(CXXFLAGS) -lboost_program_options -o $(MAINNAME) $(OBJS)
 
 # zipinfo: $(OBJS)
 # 	$(CXX) -o zipinfo $(OBJS)

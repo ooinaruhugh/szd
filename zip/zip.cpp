@@ -20,7 +20,6 @@ ZipFile::ZipFile(const char *filename) {
     }
 
     eocdr = readEOCDR(eocdrPos);
-    // TODO: Handle "bad eocdr" and to what extent
     cdr = readCDRs(eocdr.startOfCDR, eocdr.currentDiskEntriesTotal);
     // TODO: Are there any errors to handle?
     entries = getZipEntries(cdr);
@@ -79,7 +78,7 @@ EOCDR ZipFile::readEOCDR(streampos at) {
         eocdr.comment.resize(commentSize);
         file->read(eocdr.comment.data(), commentSize);
     } else {
-        eocdr.comment = vector(0, '.');
+        eocdr.comment = vector<char>(0, '.');
     }
 
     return eocdr;
@@ -149,7 +148,7 @@ vector<ZipEntry> ZipFile::getZipEntries(vector<CDR> cdrs) {
         entries.emplace_back(localHeader, cdr);
 
         if (localHeader.hasDataDescriptor()) {
-
+            // TODO: Obviously
         }
     }
 
