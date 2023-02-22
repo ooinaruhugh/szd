@@ -36,10 +36,12 @@ void processZipFile(string infilePath, string zipfilePath, string outfilePath) {
 
 int main(int argc, char const **argv) {
     try {
+        string outfile;
+
         po::options_description generic("Allowed options");
         generic.add_options()
             ("help", "print this help message")
-            ("output,o", po::value<string>(), "name for output file, defaults to <infile>.new")
+            ("output,o", po::value<string>(&outfile), "name for output file, defaults to <infile>.new")
         ;
 
         po::options_description hidden("Hidden options");
@@ -68,7 +70,7 @@ int main(int argc, char const **argv) {
             printUsage(visible);
             exit(EXIT_SUCCESS);
         }
-
+        
         string infile;
         string zipfile;
         if (vm.count("infile") && vm.count("zipfile")) {
@@ -81,10 +83,7 @@ int main(int argc, char const **argv) {
             exit(EXIT_FAILURE);
         }
 
-        string outfile;
-        if (vm.count("outfile")) {
-            outfile = vm["outfile"].as< vector<string> >()[0];
-        } else {
+        if (outfile.length() == 0) {
             outfile = infile + ".new";
         }
 
