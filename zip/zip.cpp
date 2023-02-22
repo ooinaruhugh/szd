@@ -1,5 +1,6 @@
 #include <ios>
 #include <iomanip>
+#include <filesystem>
 
 #include <stdexcept>
 
@@ -8,6 +9,13 @@
 using namespace std;
 
 ZipFile::ZipFile(const char *filename) {
+    if (!filesystem::exists(filename)) {
+        stringstream errMsg;
+        errMsg << "Zipfile "
+                << filename << " does not exist.";
+        throw invalid_argument(errMsg.str());
+    }
+
     file = make_shared<ifstream>(filename, ifstream::ate | ifstream::binary);
 
     if (!file->good()) {

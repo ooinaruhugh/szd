@@ -99,17 +99,8 @@ int main(int argc, char const **argv) {
         processZipFile(infile, zipfile, outfile);
 
         exit(EXIT_SUCCESS);
-    } catch (runtime_error e) {
+    } catch (const exception &e) {
         cerr << "error: " << e.what() << endl;
-        exit(EXIT_FAILURE);
-    } catch (istream::failure e) {
-        cerr << "error: " << e.what() << endl;
-        exit(EXIT_FAILURE);
-    } catch (invalid_argument e) {
-        cerr << "error: " << e.what() << endl;
-        exit(EXIT_FAILURE);
-    } catch (exception e) {
-        cerr << "error: unkown exception encountered" << endl;
         exit(EXIT_FAILURE);
     }
 }
