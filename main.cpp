@@ -3,6 +3,8 @@
 #include <fstream>
 #include <getopt.h>
 #include <string>
+#include <stdexcept>
+#include <filesystem>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -21,8 +23,15 @@ void printUsage(const po::options_description &desc) {
 
 void processZipFile(string infilePath, string zipfilePath, string outfilePath) {
     using namespace std;
-
+    
     ZipFile zipf{zipfilePath};
+
+    if (!filesystem::exists(infilePath)) {
+        stringstream errMsg;
+        errMsg << "Donor file "
+                << infilePath << " does not exist.";
+        throw invalid_argument(errMsg.str());
+    }
     ifstream donor{infilePath, donor.ate | donor.binary};
     ofstream outf{outfilePath, outf.binary};
 
@@ -36,7 +45,7 @@ void processZipFile(string infilePath, string zipfilePath, string outfilePath) {
 
 int main(int argc, char const **argv) {
     try {
-        string outfile;
+        string outfile{""};
 
         po::options_description generic("Allowed options");
         generic.add_options()
@@ -90,8 +99,17 @@ int main(int argc, char const **argv) {
         processZipFile(infile, zipfile, outfile);
 
         exit(EXIT_SUCCESS);
+    } catch (runtime_error e) {
+        cerr << "error: " << e.what() << endl;
+        exit(EXIT_FAILURE);
+    } catch (istream::failure e) {
+        cerr << "error: " << e.what() << endl;
+        exit(EXIT_FAILURE);
+    } catch (invalid_argument e) {
+        cerr << "error: " << e.what() << endl;
+        exit(EXIT_FAILURE);
     } catch (exception e) {
-        cout << "error: " << e.what() << endl;
+        cerr << "error: unkown exception encountered" << endl;
         exit(EXIT_FAILURE);
     }
 }

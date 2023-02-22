@@ -1,5 +1,5 @@
 CXX=clang++
-CXXFLAGS=-I.
+CXXFLAGS=-I. -std=c++17
 # CXXFLAGS=-I. -g
 INCLUDES=
 DEPS = util.h zip/zip.h zip/cdr.h zip/eocdr.h zip/LocalHeader.h
