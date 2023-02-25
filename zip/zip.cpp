@@ -191,6 +191,11 @@ ofstream& operator<< (ofstream& os, ZipFile zipfile) {
     for (auto& entry : entries) {
             auto header = entry.localHeader;
 
+            auto whereTheDataIs = entry.cdr->relOffset 
+                                + localHeaderSize 
+                                + header.filenameLength() 
+                                + header.extraLength();
+
             auto pos = os.tellp();
             entry.cdr->relOffset = pos;
 
@@ -199,7 +204,7 @@ ofstream& operator<< (ofstream& os, ZipFile zipfile) {
             os.write(header.filename.data(), header.filenameLength());
             os.write(header.extra.data(), header.extraLength());
             
-            zipfile.copyNBytesTo(os, header.compressedSize, buffer, blockSize);
+            zipfile.copyNBytesAtTo(os, whereTheDataIs, header.compressedSize, buffer, blockSize);
     }
 
     // TODO: Write archive extra data if there's any

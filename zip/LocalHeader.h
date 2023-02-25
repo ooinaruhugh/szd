@@ -26,6 +26,8 @@ using LocalHeader = struct LocalHeader {
     std::vector<char> getAsByteArray();
     bool hasDataDescriptor();
     static LocalHeader readLocalHeader(std::ifstream& file, std::streampos at);
+
+    size_t length();
 };
 
 std::ostream& operator<< (std::ostream& os, LocalHeader record);

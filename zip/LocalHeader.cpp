@@ -78,3 +78,8 @@ LocalHeader LocalHeader::readLocalHeader(ifstream& file, streampos at) {
 
     return localHeader;
 }
+
+size_t LocalHeader::length()
+{
+    return localHeaderSize + filenameLength() + extraLength() + compressedSize;
+}
