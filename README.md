@@ -22,4 +22,4 @@ szd [-o outfile] infile zipfile
 
 ## License
 
-The MIT License (MIT) 2022 - [Kamillo Ferry](https://github.com/ooinaruhugh/). Please have a look at the [LICENSE](LICENSE) for more details.
+The MIT License (MIT) 2023 - [Kamillo Ferry](https://github.com/ooinaruhugh/). Please have a look at the [LICENSE](LICENSE) for more details.
