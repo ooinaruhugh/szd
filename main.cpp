@@ -1,7 +1,6 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include <getopt.h>
 #include <string>
 #include <stdexcept>
 #include <filesystem>
@@ -22,8 +21,6 @@ void printUsage(const po::options_description &desc) {
 }
 
 void processZipFile(string infilePath, string zipfilePath, string outfilePath) {
-    using namespace std;
-    
     ZipFile zipf{zipfilePath};
 
     if (!filesystem::exists(infilePath)) {
