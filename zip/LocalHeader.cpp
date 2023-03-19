@@ -1,18 +1,19 @@
 #include "LocalHeader.h"
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 using namespace std;
 
 ostream& operator<< (std::ostream& os, LocalHeader record) {
-    auto f{os.flags()};
+    auto f{ os.flags() };
 
     os << "filename: " << string(record.filename.begin(), record.filename.end()) << "🔚" << endl;
     os << "compressed (actual, right-now) size: " << hex << record.compressedSize << endl;
 
     os << "file name length:\t0x"
-       << hex << setfill('0') << std::setw(2) << record.filenameLength() << endl;
+        << hex << setfill('0') << std::setw(2) << record.filenameLength() << endl;
     os << "extra field length:\t0x"
-       << record.extraLength() << endl; 
+        << record.extraLength() << endl;
 
     os.flags(f);
     return os;
@@ -50,23 +51,23 @@ LocalHeader LocalHeader::readLocalHeader(ifstream& file, streampos at) {
     if (getDWordLE(buffer) != localHeaderMagic) {
         stringstream errMsg;
         errMsg << "Encountered a non-local header at "
-                << std::hex << at;
+            << std::hex << at;
         throw runtime_error(errMsg.str());
     }
 
     LocalHeader localHeader{
-        .versionNeeded = getWordLE(buffer+4),
-        .generalPurpose = getWordLE(buffer+6),
-        .compressionMethod = getWordLE(buffer+8),
-        .lastModTime = getWordLE(buffer+10),
-        .lastModDate = getWordLE(buffer+12),
-        .crc32 = getDWordLE(buffer+14),
-        .compressedSize = getDWordLE(buffer+18),
-        .uncompressedSize = getDWordLE(buffer+22)
+        .versionNeeded = getWordLE(buffer + 4),
+        .generalPurpose = getWordLE(buffer + 6),
+        .compressionMethod = getWordLE(buffer + 8),
+        .lastModTime = getWordLE(buffer + 10),
+        .lastModDate = getWordLE(buffer + 12),
+        .crc32 = getDWordLE(buffer + 14),
+        .compressedSize = getDWordLE(buffer + 18),
+        .uncompressedSize = getDWordLE(buffer + 22)
     };
-    
-    auto filenameLength = getWordLE(buffer+26);
-    auto extraLength = getWordLE(buffer+28);
+
+    auto filenameLength = getWordLE(buffer + 26);
+    auto extraLength = getWordLE(buffer + 28);
 
     localHeader.data = file.tellg() + streamoff(filenameLength + extraLength);
 

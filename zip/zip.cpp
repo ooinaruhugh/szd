@@ -1,15 +1,18 @@
+#include <array>
 #include <ios>
 #include <iomanip>
 #include <filesystem>
-
+#include <sstream>
 #include <stdexcept>
 
+#include "../memmem.h"
 #include "zip.h"
 
 using namespace std;
+namespace fs = filesystem;
 
 ZipFile::ZipFile(const char *filename) {
-    if (!filesystem::exists(filename)) {
+    if (!fs::exists(filename)) {
         stringstream errMsg;
         errMsg << "Zipfile "
                 << filename << " does not exist.";

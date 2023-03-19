@@ -1,12 +1,11 @@
 #ifndef _ZIP_H
 #define _ZIP_H
 
-#include <cstring>
 #include <iostream>
 #include <fstream>
-#include <vector>
-#include <array>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "../util.h"
 #include "eocdr.h"
@@ -45,11 +44,11 @@ using ZipEntry = struct ZipEntry {
 
     CDR* const cdr;
 
-    ZipEntry(LocalHeader localHeader, CDR &cdr) : cdr(&cdr) { 
+    ZipEntry(LocalHeader localHeader, CDR& cdr) : cdr(&cdr) {
         this->localHeader = localHeader;
     }
 
-    ZipEntry(LocalHeader localHeader, CDR &cdr, DataDescriptor dd) : ZipEntry(localHeader, cdr) { 
+    ZipEntry(LocalHeader localHeader, CDR& cdr, DataDescriptor dd) : ZipEntry(localHeader, cdr) {
         this->dd = dd;
     }
 };
@@ -70,8 +69,8 @@ public:
     // ArchiveDecryptionHeader crypt;
     ArchiveExtra extra;
 
-    ZipFile(const char *filename);
-    ZipFile(const std::string &filename);
+    ZipFile(const char* filename);
+    ZipFile(const std::string& filename);
     // ZipFile(const ZipFile& zipfile);
 
     /*
@@ -81,7 +80,7 @@ public:
     std::streampos findMagic(DWORD magic);
     std::streampos findMagicFromEnd(DWORD magic);
 
-    
+
     /// @brief  Reads the end-of-central directory record at the specified position, 
     ///         if there is one.
     /// @param at 
@@ -101,13 +100,13 @@ public:
     */
     std::vector<ZipEntry> getZipEntries(std::vector<CDR> cdrs);
 
-    /* 
+    /*
         Copies n bytes from the input file to the output file using
         a buffer of size n_buffer.
     */
     void copyNBytesTo(std::ofstream& outfile, size_t n, char* buffer, size_t n_buffer);
 
-    /* 
+    /*
         Copies n bytes from the input file at the given offset to the output file using
         a buffer of size n_buffer.
     */

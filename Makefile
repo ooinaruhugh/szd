@@ -1,9 +1,11 @@
+CC=clang
 CXX=clang++
-CXXFLAGS=-I. -std=c++17
+CFLAGS=-I. -std=c17
+CXXFLAGS=-I. -std=c++20
 INCLUDES=
-DEPS = util.h zip/zip.h zip/cdr.h zip/eocdr.h zip/LocalHeader.h
-SRCS = main.cpp util.cpp zip/zip.cpp zip/cdr.cpp zip/eocdr.cpp zip/LocalHeader.cpp
-OBJS = $(SRCS:.cpp=.o)
+DEPS = util.h memmem.h zip/zip.h zip/cdr.h zip/eocdr.h zip/LocalHeader.h 
+SRCS = main.cpp util.cpp memmem.c zip/zip.cpp zip/cdr.cpp zip/eocdr.cpp zip/LocalHeader.cpp
+OBJS = $(addsuffix .o,$(basename $(SRCS)))
 
 DEBUG_FORMAT = gdb
 
@@ -26,6 +28,9 @@ main: $(OBJS)
 
 %.o: %.cpp $(DEPS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
+
+%.o: %.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 depend: $(SRCS)
 	# makedepend $(INCLUDES) $^
