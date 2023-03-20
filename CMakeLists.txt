@@ -28,4 +28,15 @@ find_package(
     Boost 1.40 REQUIRED
     COMPONENTS program_options 
 )
-target_link_libraries(szd Boost::program_options)
+include_directories(${Boost_INCLUDE_DIRS})
+target_link_libraries(szd ${Boost_PROGRAM_OPTIONS_LIBRARY})
+
+if (WIN32)
+    message("Doing some Windows specific stuff")
+    # disable autolinking in boost
+    add_definitions( -DBOOST_ALL_NO_LIB )
+
+    # force all boost libraries to dynamic link (we already disabled
+    # autolinking, so I don't know why we need this, but we do!)
+    add_definitions( -DBOOST_ALL_DYN_LINK )
+endif()
