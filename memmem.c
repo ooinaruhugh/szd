@@ -16,6 +16,7 @@ void *memchr(const void* s, int c, size_t n) {
 }
 
 void* memmem(const void *haystack, size_t haystacklen, const void *needle, size_t needlelen) {
+    if (haystack == NULL || needle == NULL) return NULL;
     if (haystacklen == 0 || needlelen == 0) return NULL;
     if (needlelen > haystacklen) return NULL;
     if (needlelen == 1) return memchr(haystack, *(BYTE*)needle, haystacklen);
