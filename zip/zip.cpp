@@ -188,11 +188,11 @@ ofstream& operator<< (ofstream& os, ZipFile zipfile) {
     // Buffer for copying unchanged file contents
     char buffer[blockSize];
 
-    auto entries = zipfile.entries;
+    auto& entries = zipfile.entries;
 
     // Write out all the local file headers plus data payloads (the ones that we've collected)
     for (auto& entry : entries) {
-            auto header = entry.localHeader;
+            auto& header = entry.localHeader;
 
             auto whereTheDataIs = entry.cdr->relOffset 
                                 + localHeaderSize 
@@ -214,8 +214,8 @@ ofstream& operator<< (ofstream& os, ZipFile zipfile) {
     // Write updated CDR
 
     auto cdrPos = os.tellp();
-    for (auto entry : entries) {
-        auto cdr = entry.cdr;
+    for (auto& entry : entries) {
+        auto& cdr = entry.cdr;
 
         os.write(reinterpret_cast<const char*>(&cdrMagic), sizeof(cdrMagic));
         os.write(cdr->getAsByteArray().data(), cdrSize-4);
