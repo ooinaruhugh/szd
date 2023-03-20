@@ -47,7 +47,6 @@ CTestTestfile.cmake
 _deps
 
 build/
-examples/
 
 .vs/
 .vscode/
