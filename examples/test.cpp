@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include "../util.h"
+#include "util.h"
 
 int main(int argc, char const ** argv) {
     using namespace std;
