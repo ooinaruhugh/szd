@@ -200,7 +200,7 @@ ofstream& operator<< (ofstream& os, ZipFile zipfile) {
                                 + header.extraLength();
 
             auto pos = os.tellp();
-            entry.cdr->relOffset = pos;
+            entry.cdr->relOffset = (DWORD)pos;
 
             os.write(reinterpret_cast<const char*>(&localHeaderMagic), sizeof(localHeaderMagic));
             os.write(header.getAsByteArray().data(), localHeaderSize-4);
@@ -224,7 +224,7 @@ ofstream& operator<< (ofstream& os, ZipFile zipfile) {
         os.write(cdr->comment.data(), cdr->commentLength());
     }
 
-    zipfile.eocdr.startOfCDR = cdrPos;
+    zipfile.eocdr.startOfCDR = (DWORD)cdrPos;
 
     // Write updated EOCDR
     os.write(reinterpret_cast<const char*>(&eocdrMagic), sizeof(eocdrMagic));
