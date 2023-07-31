@@ -61,7 +61,7 @@ streampos ZipFile::findEOCDR() {
         needle = (char*)memmem(searchBuffer.data(), readBufferSize, &eocdrMagic, 4);
     } while ((central_directory > 0) && needle == nullptr);
     
-    return needle ? central_directory + (streampos)(needle - searchBuffer.data()) : streampos(-1);
+    return needle ? central_directory + (streamoff)(needle - searchBuffer.data()) : streampos(-1);
 }
 
 EOCDR ZipFile::readEOCDR(streampos at) {
@@ -188,7 +188,7 @@ ofstream& operator<< (ofstream& os, ZipFile zipfile) {
     const size_t blockSize = 4096;
     // Buffer for copying unchanged file contents
     char buffer[blockSize];
-    
+  
     auto newCDR = zipfile.cdr;
 
     // Write out all the local file headers plus data payloads (the ones that we've collected)
@@ -215,6 +215,7 @@ ofstream& operator<< (ofstream& os, ZipFile zipfile) {
     // Write updated CDR
 
     auto cdrPos = os.tellp();
+  
     for (auto entry : newCDR) {
         os.write(reinterpret_cast<const char*>(&cdrMagic), sizeof(cdrMagic));
         os.write(entry.getAsByteArray().data(), cdrSize-4);
