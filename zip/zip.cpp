@@ -61,7 +61,7 @@ streampos ZipFile::findEOCDR() {
         needle = (char*)memmem(searchBuffer.data(), readBufferSize, &eocdrMagic, 4);
     } while ((central_directory > 0) && needle == nullptr);
     
-    return needle ? central_directory + (needle - searchBuffer.data()) : streampos(-1);
+    return needle ? central_directory + (streampos)(needle - searchBuffer.data()) : streampos(-1);
 }
 
 EOCDR ZipFile::readEOCDR(streampos at) {
