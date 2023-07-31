@@ -7,7 +7,7 @@ using namespace std;
 
 #include "eocdr.h"
 
-ostream& operator<< (ostream& os, EOCDR eocdr) {
+ostream& operator<< (ostream& os, const EOCDR &eocdr) {
     auto f{os.flags()};
 
     os << "number of this disk:\t" 
@@ -33,7 +33,7 @@ ostream& operator<< (ostream& os, EOCDR eocdr) {
     return os;
 }
 
-vector<char> EOCDR::getAsByteArray() {
+vector<char> EOCDR::getAsByteArray() const {
     vector<char> zaBytes;
     zaBytes.reserve(eocdrSize-4);
 

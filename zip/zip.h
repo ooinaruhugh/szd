@@ -37,22 +37,6 @@ using DigitalSignature = struct DigitalSignature {
     char* data;
 };
 
-using ZipEntry = struct ZipEntry {
-    LocalHeader localHeader;
-    // EncryptionHeader crypt;
-    DataDescriptor dd;
-
-    CDR* const cdr;
-
-    ZipEntry(LocalHeader localHeader, CDR& cdr) : cdr(&cdr) {
-        this->localHeader = localHeader;
-    }
-
-    ZipEntry(LocalHeader localHeader, CDR& cdr, DataDescriptor dd) : ZipEntry(localHeader, cdr) {
-        this->dd = dd;
-    }
-};
-
 class ZipFile {
     std::shared_ptr<std::ifstream> file;
 public:
@@ -64,7 +48,7 @@ public:
 
     std::vector<CDR> cdr;
 
-    std::vector<ZipEntry> entries;
+    std::vector<LocalHeader> entries;
 
     // ArchiveDecryptionHeader crypt;
     ArchiveExtra extra;
@@ -98,7 +82,7 @@ public:
         Gets all zip entries with their associated headers and data from the file
         as specified by the central directory records in cdrs.
     */
-    std::vector<ZipEntry> getZipEntries(std::vector<CDR> cdrs);
+    std::vector<LocalHeader> getZipEntries(std::vector<CDR> cdrs);
 
     /*
         Copies n bytes from the input file to the output file using

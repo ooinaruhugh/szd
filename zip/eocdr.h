@@ -15,10 +15,10 @@ using EOCDR = struct EOCDR {
     WORD entriesTotal;
     DWORD size;
     DWORD startOfCDR;
-    WORD commentSize() { return comment.size(); }
+    WORD commentSize() const { return comment.size(); }
     std::vector<char> comment;
     
-    std::vector<char> getAsByteArray();
+    std::vector<char> getAsByteArray() const;
 };
 
 const size_t eocdr64Size = 46; 
@@ -31,7 +31,7 @@ using EOCDR64 = struct EOCDR64 {
     QWORD currentDiskEntriesTotal;
     QWORD entriesTotal;
     QWORD startOfCDR;
-    WORD commentSize() { return data.size(); }
+    WORD commentSize() const { return data.size(); }
     std::vector<char> data;
 };
 

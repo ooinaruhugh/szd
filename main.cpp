@@ -25,8 +25,7 @@ void processZipFile(string infilePath, string zipfilePath, string outfilePath) {
 
     if (!filesystem::exists(infilePath)) {
         stringstream errMsg;
-        errMsg << "Donor file "
-                << infilePath << " does not exist.";
+        errMsg << "Donor file " << infilePath << " does not exist.";
         throw invalid_argument(errMsg.str());
     }
     ifstream donor{infilePath, donor.ate | donor.binary};
