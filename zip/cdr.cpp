@@ -3,7 +3,7 @@
 #include "cdr.h"
 using namespace std;
 
-ostream& operator<<(ostream& os, CDR record) {
+ostream& operator<<(ostream& os, const CDR &record) {
     auto f{os.flags()};
 
     os << "filename: " << string(record.filename.begin(), record.filename.end()) << "🔚" << endl;
@@ -24,7 +24,7 @@ ostream& operator<<(ostream& os, CDR record) {
     return os;
 }
 
-vector<char> CDR::getAsByteArray() {
+vector<char> CDR::getAsByteArray() const {
     vector<char> zaBytes;
     zaBytes.reserve(cdrSize-4);
 
@@ -46,4 +46,9 @@ vector<char> CDR::getAsByteArray() {
     appendArrayToVector(zaBytes, putDWordLE(this->relOffset));
 
     return zaBytes;
+}
+
+size_t CDR::length() const
+{
+    return cdrSize + filenameLength() + extraLength() + commentLength();
 }

@@ -150,13 +150,14 @@ vector<CDR> ZipFile::readCDRs(streampos beginAt, WORD noOfRecords) {
 
 }
 
-vector<ZipEntry> ZipFile::getZipEntries(vector<CDR> cdrs) {
-    vector<ZipEntry> entries;
+vector<LocalHeader> ZipFile::getZipEntries(vector<CDR> cdrs) {
+    vector<LocalHeader> entries;
+    
+    for (auto cdr = begin(cdrs), last = end(cdrs); cdr != last; ++cdr) {
+        auto localHeader = LocalHeader::readLocalHeader(*file, cdr->relOffset);
+        localHeader.indexOfCDR = distance(begin(cdrs), cdr);
 
-    for (auto &&cdr : cdrs) {
-        auto localHeader = LocalHeader::readLocalHeader(*file, cdr.relOffset);
-
-        entries.emplace_back(localHeader, cdr);
+        entries.emplace_back(localHeader);
 
         if (localHeader.hasDataDescriptor()) {
             // TODO: Obviously
@@ -187,50 +188,49 @@ ofstream& operator<< (ofstream& os, ZipFile zipfile) {
     const size_t blockSize = 4096;
     // Buffer for copying unchanged file contents
     char buffer[blockSize];
-
-    auto entries = zipfile.entries;
+    
+    auto newCDR = zipfile.cdr;
 
     // Write out all the local file headers plus data payloads (the ones that we've collected)
-    for (auto& entry : entries) {
-            auto header = entry.localHeader;
+    for (const auto& entry : zipfile.entries) {
+        auto& cdr = newCDR.at(entry.indexOfCDR);
+        
+        auto whereTheDataIs = cdr.relOffset
+                            + localHeaderSize
+                            + entry.filenameLength()
+                            + entry.extraLength();
 
-            auto whereTheDataIs = entry.cdr->relOffset 
-                                + localHeaderSize 
-                                + header.filenameLength() 
-                                + header.extraLength();
+        auto pos = os.tellp();
+        cdr.relOffset = (DWORD)pos;
 
-            auto pos = os.tellp();
-            entry.cdr->relOffset = pos;
-
-            os.write(reinterpret_cast<const char*>(&localHeaderMagic), sizeof(localHeaderMagic));
-            os.write(header.getAsByteArray().data(), localHeaderSize-4);
-            os.write(header.filename.data(), header.filenameLength());
-            os.write(header.extra.data(), header.extraLength());
-            
-            zipfile.copyNBytesAtTo(os, whereTheDataIs, header.compressedSize, buffer, blockSize);
+        os.write(reinterpret_cast<const char*>(&localHeaderMagic), sizeof(localHeaderMagic));
+        os.write(entry.getAsByteArray().data(), localHeaderSize-4);
+        os.write(entry.filename.data(), entry.filenameLength());
+        os.write(entry.extra.data(), entry.extraLength());
+        
+        zipfile.copyNBytesAtTo(os, whereTheDataIs, entry.compressedSize, buffer, blockSize);
     }
 
     // TODO: Write archive extra data if there's any
     // Write updated CDR
 
     auto cdrPos = os.tellp();
-    for (auto entry : entries) {
-        auto cdr = entry.cdr;
-
+    for (auto entry : newCDR) {
         os.write(reinterpret_cast<const char*>(&cdrMagic), sizeof(cdrMagic));
-        os.write(cdr->getAsByteArray().data(), cdrSize-4);
-        os.write(cdr->filename.data(), cdr->filenameLength());
-        os.write(cdr->extra.data(), cdr->extraLength());
-        os.write(cdr->comment.data(), cdr->commentLength());
+        os.write(entry.getAsByteArray().data(), cdrSize-4);
+        os.write(entry.filename.data(), entry.filenameLength());
+        os.write(entry.extra.data(), entry.extraLength());
+        os.write(entry.comment.data(), entry.commentLength());
     }
 
-    zipfile.eocdr.startOfCDR = cdrPos;
+    auto eocdr = zipfile.eocdr;
+    eocdr.startOfCDR = cdrPos;
 
     // Write updated EOCDR
     os.write(reinterpret_cast<const char*>(&eocdrMagic), sizeof(eocdrMagic));
-    os.write(zipfile.eocdr.getAsByteArray().data(), eocdrSize-4);
-    if (zipfile.eocdr.commentSize() > 0) 
-        os.write(zipfile.eocdr.comment.data(), zipfile.eocdr.commentSize());
+    os.write(eocdr.getAsByteArray().data(), eocdrSize-4);
+    if (eocdr.commentSize() > 0)
+        os.write(eocdr.comment.data(), eocdr.commentSize());
 
     return os;
 }

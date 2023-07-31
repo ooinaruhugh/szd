@@ -16,9 +16,9 @@ using CDR = struct CDR {
     DWORD crc32;
     DWORD compressedSize;
     DWORD uncompressedSize;
-    WORD filenameLength() { return filename.size(); }
-    WORD extraLength() { return extra.size(); }
-    WORD commentLength() { return comment.size(); }
+    WORD filenameLength() const { return filename.size(); }
+    WORD extraLength() const { return extra.size(); }
+    WORD commentLength() const { return comment.size(); }
     WORD diskNoStart;
     WORD internalAttr;
     DWORD externalAttr;
@@ -27,9 +27,11 @@ using CDR = struct CDR {
     std::vector<char> extra;
     std::vector<char> comment;
 
-    std::vector<char> getAsByteArray();
+    std::vector<char> getAsByteArray() const;
+    
+    size_t length() const;
 };
 
-std::ostream& operator<< (std::ostream& os, CDR record);
+std::ostream& operator<< (std::ostream& os, const CDR &record);
 
 #endif // _CDR_H

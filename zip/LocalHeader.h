@@ -16,20 +16,21 @@ using LocalHeader = struct LocalHeader {
     DWORD crc32;
     DWORD compressedSize;
     DWORD uncompressedSize;
-    WORD filenameLength() { return filename.size(); }
-    WORD extraLength() { return extra.size(); }
+    WORD filenameLength() const { return filename.size(); }
+    WORD extraLength() const { return extra.size(); }
     std::vector<char> filename;
     std::vector<char> extra;
     // The position of the data in the zipfile. This is not part of the original header.
     std::streampos data;
+    size_t indexOfCDR;
 
-    std::vector<char> getAsByteArray();
-    bool hasDataDescriptor();
+    std::vector<char> getAsByteArray() const;
+    bool hasDataDescriptor() const;
     static LocalHeader readLocalHeader(std::ifstream& file, std::streampos at);
 
-    size_t length();
+    size_t length() const;
 };
 
-std::ostream& operator<< (std::ostream& os, LocalHeader record);
+std::ostream& operator<< (std::ostream& os, const LocalHeader &record);
 
 #endif // _LOCALHEADER_H

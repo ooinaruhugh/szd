@@ -4,7 +4,7 @@
 #include <sstream>
 using namespace std;
 
-ostream& operator<< (std::ostream& os, LocalHeader record) {
+ostream& operator<< (std::ostream& os, const LocalHeader &record) {
     auto f{ os.flags() };
 
     os << "filename: " << string(record.filename.begin(), record.filename.end()) << "🔚" << endl;
@@ -19,7 +19,7 @@ ostream& operator<< (std::ostream& os, LocalHeader record) {
     return os;
 }
 
-vector<char> LocalHeader::getAsByteArray() {
+vector<char> LocalHeader::getAsByteArray() const {
     vector<char> zaBytes;
     zaBytes.reserve(localHeaderSize);
 
@@ -37,7 +37,7 @@ vector<char> LocalHeader::getAsByteArray() {
     return zaBytes;
 }
 
-bool LocalHeader::hasDataDescriptor() {
+bool LocalHeader::hasDataDescriptor() const {
     return nthBitIsSet(generalPurpose, 3);
 }
 
@@ -80,7 +80,7 @@ LocalHeader LocalHeader::readLocalHeader(ifstream& file, streampos at) {
     return localHeader;
 }
 
-size_t LocalHeader::length()
+size_t LocalHeader::length() const
 {
     return localHeaderSize + filenameLength() + extraLength() + compressedSize;
 }
