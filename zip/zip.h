@@ -12,16 +12,8 @@
 #include "cdr.h"
 #include "LocalHeader.h"
 
-const DWORD ddMagic = 0x08074b50;
 const DWORD archiveExtraMagic = 0x08064b50;
 const DWORD digitalSignatureMagic = 0x05054b50;
-
-const size_t dataDescriptorSize = 12;
-using DataDescriptor = struct DataDescriptor {
-    DWORD crc32;
-    DWORD compressedSize;
-    DWORD uncompressedSize;
-};
 
 // TODO: Archive decryption header
 

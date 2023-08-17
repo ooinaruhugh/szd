@@ -20,10 +20,14 @@ inline bool nthBitIsSet(QWORD bitfield, unsigned short bit) {
     Reading little-endian bytes in a host-agnostic way.
 */
 
+/// Reads a `WORD` from a little-endian byte array in a host-agnostic way.
+/// - Parameter bytes: A little-endian byte array
 inline WORD getWordLE(const unsigned char* bytes) {
     return ((WORD)bytes[1] << 8) | ((WORD)bytes[0]);
 }
 
+/// Reads a `DWORD` from a little-endian byte array in a host-agnostic way.
+/// - Parameter bytes: A little-endian byte array
 inline DWORD getDWordLE(const unsigned char* bytes) {
     return ((DWORD)bytes[3] << 24) 
            | ((DWORD)bytes[2] << 16) 
@@ -31,6 +35,8 @@ inline DWORD getDWordLE(const unsigned char* bytes) {
            | ((DWORD)bytes[0]);
 }
 
+/// Reads a `QWORD` from a little-endian byte array in a host-agnostic way.
+/// - Parameter bytes: A little-endian byte array
 inline QWORD getQWordLE(const unsigned char* bytes) {
     return ((QWORD)bytes[7] << 56)
            | ((QWORD)bytes[6] << 48) 
@@ -46,6 +52,8 @@ inline QWORD getQWordLE(const unsigned char* bytes) {
     Writing bytes as little-endian in an host-agnostic way.
 */
 
+/// Writes a `WORD` given as number into a little-endian byte array in a host-agnostic way
+/// - Parameter bytes: A number describing a   `DWORD` (a.k.a. a `uint16_t`)
 inline std::array<char, sizeof(WORD)> putWordLE(WORD bytes) {
     return {
         (char)(bytes & 0xFF),
@@ -53,6 +61,8 @@ inline std::array<char, sizeof(WORD)> putWordLE(WORD bytes) {
     };
 }
 
+/// Writes a `DWORD` given as number into a little-endian byte array in a host-agnostic way
+/// - Parameter bytes: A number describing a   `DWORD` (a.k.a. a `uint32_t`)
 inline std::array<char, sizeof(DWORD)> putDWordLE(DWORD bytes) {
     return {
         (char)(bytes & 0xFF),
@@ -65,13 +75,20 @@ inline std::array<char, sizeof(DWORD)> putDWordLE(DWORD bytes) {
 /*
     This append the contents of some container types into a std::vector.
 */
-template<typename T>
-inline void appendVectorToVector(std::vector<T>& to, std::vector<T> from) {
+
+/// This append the contents of a `std::vector` to a `std::vector`.
+/// - Parameters:
+///   - to: The target `std::vector`
+///   - from: The donor `std::vector`
+template<typename T> inline void appendVectorToVector(std::vector<T>& to, std::vector<T> from) {
     to.insert(to.end(), from.cbegin(), from.cend());
 }
 
-template<typename T, size_t size>
-inline void appendArrayToVector(std::vector<T>& to, std::array<T, size> from) {
+/// This append the contents of a `std::array` to a `std::vector`.
+/// - Parameters:
+///   - to: The target `std::vector`
+///   - from: The donor `std::array`
+template<typename T, size_t size> inline void appendArrayToVector(std::vector<T>& to, std::array<T, size> from) {
     to.insert(to.end(), from.cbegin(), from.cend());
 }
 

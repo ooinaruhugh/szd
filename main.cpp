@@ -65,22 +65,22 @@ int main(int argc, char const **argv) {
         po::options_description visible;
         visible.add(generic);
 
-        po::variables_map vm;
+        po::variables_map variables;
         po::store(po::command_line_parser(argc, argv)
                                 .options(cmdline_options)
-                                .positional(p).run(), vm);
-        po::notify(vm);
+                                .positional(p).run(), variables);
+        po::notify(variables);
 
-        if (vm.count("help")) {
+        if (variables.count("help")) {
             printUsage(visible);
             exit(EXIT_SUCCESS);
         }
         
         string infile;
         string zipfile;
-        if (vm.count("infile") && vm.count("zipfile")) {
-            infile  = vm["infile"].as< vector<string> >()[0];
-            zipfile = vm["zipfile"].as< vector<string> >()[0];
+        if (variables.count("infile") && variables.count("zipfile")) {
+            infile  = variables["infile"].as< vector<string> >()[0];
+            zipfile = variables["zipfile"].as< vector<string> >()[0];
         } else {
             cerr << "Error: you have to specify an input zipfile and a input target file." << endl;
             printUsage(visible);

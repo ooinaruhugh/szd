@@ -50,8 +50,7 @@ LocalHeader LocalHeader::readLocalHeader(ifstream& file, streampos at) {
 
     if (getDWordLE(buffer) != localHeaderMagic) {
         stringstream errMsg;
-        errMsg << "Encountered a non-local header at "
-            << std::hex << at;
+        errMsg << "Encountered a non-local header at " << std::hex << at;
         throw runtime_error(errMsg.str());
     }
 
@@ -65,6 +64,10 @@ LocalHeader LocalHeader::readLocalHeader(ifstream& file, streampos at) {
         .compressedSize = getDWordLE(buffer + 18),
         .uncompressedSize = getDWordLE(buffer + 22)
     };
+    
+    if (localHeader.hasDataDescriptor()) {
+        localHeader.dataDescriptor = localHeader.findDataDescriptor(file);
+    }
 
     auto filenameLength = getWordLE(buffer + 26);
     auto extraLength = getWordLE(buffer + 28);
@@ -80,7 +83,23 @@ LocalHeader LocalHeader::readLocalHeader(ifstream& file, streampos at) {
     return localHeader;
 }
 
-size_t LocalHeader::length() const
-{
+size_t LocalHeader::length() const {
     return localHeaderSize + filenameLength() + extraLength() + compressedSize;
+}
+
+DataDescriptor LocalHeader::findDataDescriptor(ifstream& file) const {
+    throw runtime_error("Data descriptor is not implement yet.");
+    
+    // TODO: Variant 1
+    // - Look for magic number (up to uncompressed size)
+    // - if DD magic is found, check whether distance is exactly compressed size of DD
+    // - otherwise, look for next
+    
+    // TODO: Variant 2
+    // - Do sliding window, just take the one where uncompressed size and maybe crc32 lines up
+    
+    // TODO: Variant 3
+    // - Look til next local header, then look backwards from there
+    
+    return {};
 }

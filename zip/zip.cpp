@@ -15,7 +15,7 @@ ZipFile::ZipFile(const char *filename) {
     if (!fs::exists(filename)) {
         stringstream errMsg;
         errMsg << "Zipfile "
-                << filename << " does not exist.";
+               << filename << " does not exist.";
         throw invalid_argument(errMsg.str());
     }
 
@@ -216,7 +216,7 @@ ofstream& operator<< (ofstream& os, ZipFile zipfile) {
 
     auto cdrPos = os.tellp();
   
-    for (auto entry : newCDR) {
+    for (const auto& entry : newCDR) {
         os.write(reinterpret_cast<const char*>(&cdrMagic), sizeof(cdrMagic));
         os.write(entry.getAsByteArray().data(), cdrSize-4);
         os.write(entry.filename.data(), entry.filenameLength());
