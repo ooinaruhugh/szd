@@ -7,9 +7,12 @@ DEPS = util.h memmem.h zip/zip.h zip/cdr.h zip/eocdr.h zip/LocalHeader.h
 SRCS = main.cpp util.cpp memmem.c zip/zip.cpp zip/cdr.cpp zip/eocdr.cpp zip/LocalHeader.cpp
 OBJS = $(addsuffix .o,$(basename $(SRCS)))
 
+PREFIX=/usr/local
+
 DEBUG_FORMAT = gdb
 
 MAINNAME = szd
+TARGETS = $(MAINNAME)
 
 DEBUG ?= 1
 ifeq ($(DEBUG), 1)
@@ -39,4 +42,11 @@ depend: $(SRCS)
 clean: 
 	$(RM) $(OBJS) $(MAINNAME)
 
-.PHONY: depend clean
+install:
+	@mkdir -p $(PREFIX)/bin
+	install $(TARGETS) $(PREFIX)/bin
+
+uninstall:
+	rm $(TARGETS:%=$(PREFIX)/bin/%)
+
+.PHONY: depend clean install uninstall
