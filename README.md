@@ -1,5 +1,7 @@
 # szd
 
+![Just a build](https://github.com/ooinaruhugh/szd/actions/workflows/make.yml/badge.svg)
+
 Append a zip file to another file.
 
 > I honestly don't remember what szd stands for, so I *guess* it's now "***s***tick ***z***ip to ***d***ocument". ¯\\\_(ツ)\_/¯
