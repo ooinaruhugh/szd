@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <iterator>
 #include <fstream>
 #include <string>
 #include <stdexcept>
@@ -34,7 +35,12 @@ void processZipFile(string infilePath, string zipfilePath, string outfilePath) {
     auto endOfDonor = donor.tellg();
 
     donor.seekg(0);
-    outf << donor.rdbuf();
+    copy(
+         istreambuf_iterator(donor),
+         istreambuf_iterator<char>(),
+         ostreambuf_iterator(outf)
+    );
+    //outf << donor.rdbuf();
 
     outf << zipf;
 }
