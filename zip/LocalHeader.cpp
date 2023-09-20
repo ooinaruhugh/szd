@@ -88,7 +88,7 @@ size_t LocalHeader::length() const {
 }
 
 DataDescriptor LocalHeader::findDataDescriptor(ifstream& file) const {
-    throw runtime_error("Data descriptor is not implement yet.");
+    throw runtime_error("Data descriptor is not implemented yet.");
     
     // TODO: Variant 1
     // - Look for magic number (up to uncompressed size)
