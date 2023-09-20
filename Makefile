@@ -1,20 +1,13 @@
 CC=clang
 CXX=clang++
+
 override CFLAGS+=-I. -std=c17
 override CXXFLAGS+=-I. -std=c++20
+LDLIBS=-lboost_program_options 
 INCLUDES=
-DEPS = util.h memmem.h zip/zip.h zip/cdr.h zip/eocdr.h zip/LocalHeader.h 
-SRCS = main.cpp util.cpp memmem.c zip/zip.cpp zip/cdr.cpp zip/eocdr.cpp zip/LocalHeader.cpp
-OBJS = $(addsuffix .o,$(basename $(SRCS)))
-
-PREFIX=/usr/local
-
-DEBUG_FORMAT = gdb
-
-MAINNAME = szd
-TARGETS = $(MAINNAME)
 
 DEBUG ?= 1
+DEBUG_FORMAT = gdb
 ifeq ($(DEBUG), 1)
 	override CFLAGS   +=-DDEBUG -Og -g$(DEBUG_FORMAT)
 	override CXXFLAGS +=-DDEBUG -Og -g$(DEBUG_FORMAT)
@@ -23,8 +16,19 @@ else
 	override CXXFLAGS +=-DNDEBUG
 endif
 
-main: $(OBJS)
-	$(CXX) $(CXXFLAGS) -lboost_program_options -o $(MAINNAME) $(OBJS)
+PREFIX=/usr/local
+
+TARGETS = $(MAINNAME)
+MAINNAME = szd
+
+DEPS = util.h memmem.h zip/zip.h zip/cdr.h zip/eocdr.h zip/LocalHeader.h 
+SRCS = main.cpp util.cpp memmem.c zip/zip.cpp zip/cdr.cpp zip/eocdr.cpp zip/LocalHeader.cpp
+OBJS = $(addsuffix .o,$(basename $(SRCS)))
+
+main: $(MAINNAME)
+
+szd: $(OBJS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ $(OBJS) $(LOADLIBES) $(LDLIBS)
 
 # zipinfo: $(OBJS)
 # 	$(CXX) -o zipinfo $(OBJS)
@@ -49,4 +53,4 @@ install:
 uninstall:
 	rm $(TARGETS:%=$(PREFIX)/bin/%)
 
-.PHONY: depend clean install uninstall
+.PHONY: main depend clean install uninstall
