@@ -16,7 +16,7 @@ jobs:
     # - name: configure
     #   run: ./configure
     # install dependencies
-    - name: boost
+    - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install -yq libboost-all-dev
     - name: make
       run: make
