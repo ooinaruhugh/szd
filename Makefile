@@ -39,10 +39,6 @@ szd: $(OBJS)
 # %.o: %.c $(DEPS)
 # 	$(CC) -c -o $@ $< $(CFLAGS)
 
-depend: $(SRCS)
-	# makedepend $(INCLUDES) $^
-	makedepend $^
-
 clean: 
 	$(RM) $(OBJS) $(MAINNAME)
 
