@@ -1,28 +1,31 @@
 cmake_minimum_required(VERSION 3.20)
-project(szd)
+project(szd
+    VERSION 0.2
+    LANGUAGES CXX C
+)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(SZD_SOURCES
-    util.cpp
-    memmem.c
-    zip/zip.cpp
-    zip/cdr.cpp
-    zip/eocdr.cpp
-    zip/LocalHeader.cpp
+    src/util.cpp
+    src/memmem.c
+    src/zip/zip.cpp
+    src/zip/cdr.cpp
+    src/zip/eocdr.cpp
+    src/zip/LocalHeader.cpp
 )
 
 set(HEADERS
-    util.h
-    memmem.h
-    zip/zip.h
-    zip/cdr.h
-    zip/eocdr.h
-    zip/LocalHeader.h
+    src/util.h
+    src/memmem.h
+    src/zip/zip.h
+    src/zip/cdr.h
+    src/zip/eocdr.h
+    src/zip/LocalHeader.h
 )
 
-add_executable(szd main.cpp ${SZD_SOURCES} ${HEADERS})
+add_executable(szd src/main.cpp ${SZD_SOURCES} ${HEADERS})
 
 find_package(
     Boost 1.40 REQUIRED

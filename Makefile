@@ -21,8 +21,8 @@ PREFIX=/usr/local
 TARGETS = $(MAINNAME)
 MAINNAME = szd
 
-DEPS = util.h memmem.h zip/zip.h zip/cdr.h zip/eocdr.h zip/LocalHeader.h 
-SRCS = main.cpp util.cpp memmem.c zip/zip.cpp zip/cdr.cpp zip/eocdr.cpp zip/LocalHeader.cpp
+DEPS = src/util.h src/memmem.h src/zip/zip.h src/zip/cdr.h src/zip/eocdr.h src/zip/LocalHeader.h 
+SRCS = src/main.cpp src/util.cpp src/memmem.c src/zip/zip.cpp src/zip/cdr.cpp src/zip/eocdr.cpp src/zip/LocalHeader.cpp
 OBJS = $(addsuffix .o,$(basename $(SRCS)))
 
 main: $(MAINNAME)

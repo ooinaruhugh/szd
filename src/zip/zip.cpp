@@ -20,6 +20,7 @@ ZipFile::ZipFile(const char *filename) {
     }
 
     file = make_shared<ifstream>(filename, ifstream::ate | ifstream::binary);
+    file->unsetf(file->skipws);
 
     if (!file->good()) {
         throw ifstream::failure("Failed to open zipfile.");
