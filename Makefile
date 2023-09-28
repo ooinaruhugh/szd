@@ -1,8 +1,8 @@
 CC=clang
 CXX=clang++
 
-override CFLAGS+=-I. -std=c17
-override CXXFLAGS+=-I. -std=c++20
+override CFLAGS+=-Isrc -std=c17
+override CXXFLAGS+=-Isrc -std=c++20
 LDLIBS=-lboost_program_options 
 INCLUDES=
 
