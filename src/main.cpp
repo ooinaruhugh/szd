@@ -10,6 +10,7 @@
 namespace po = boost::program_options;
 
 #include "zip/zip.h"
+#include "zip/eocdr.h"
 
 using namespace std;
 
@@ -21,29 +22,29 @@ void printUsage(const po::options_description &desc) {
     cerr << "Usage: szd [options] infile zipfile" << endl << desc;
 }
 
-void processZipFile(string infilePath, string zipfilePath, string outfilePath) {
-    ZipFile zipf{zipfilePath};
-
-    if (!filesystem::exists(infilePath)) {
-        stringstream errMsg;
-        errMsg << "Donor file " << infilePath << " does not exist.";
-        throw invalid_argument(errMsg.str());
-    }
-    ifstream donor{infilePath, donor.ate | donor.binary};
-    ofstream outf{outfilePath, outf.binary};
-
-    auto endOfDonor = donor.tellg();
-
-    donor.seekg(0);
-    copy(
-         istreambuf_iterator(donor),
-         istreambuf_iterator<char>(),
-         ostreambuf_iterator(outf)
-    );
-    //outf << donor.rdbuf();
-
-    outf << zipf;
-}
+//void processZipFile(string infilePath, string zipfilePath, string outfilePath) {
+//    ZipFile zipf{zipfilePath};
+//
+//    if (!filesystem::exists(infilePath)) {
+//        stringstream errMsg;
+//        errMsg << "Donor file " << infilePath << " does not exist.";
+//        throw invalid_argument(errMsg.str());
+//    }
+//    ifstream donor{infilePath, donor.ate | donor.binary};
+//    ofstream outf{outfilePath, outf.binary};
+//
+//    auto endOfDonor = donor.tellg();
+//
+//    donor.seekg(0);
+//    copy(
+//         istreambuf_iterator(donor),
+//         istreambuf_iterator<char>(),
+//         ostreambuf_iterator(outf)
+//    );
+//    //outf << donor.rdbuf();
+//
+//    //outf << zipf;
+//}
 
 int main(int argc, char const **argv) {
     try {
@@ -98,7 +99,9 @@ int main(int argc, char const **argv) {
             outfile = infile + ".new";
         }
 
-        processZipFile(infile, zipfile, outfile);
+        //processZipFile(infile, zipfile, outfile);
+        ZipFile zipf{zipfile};
+        cout << zipf.zip.eocdr << endl;
 
         exit(EXIT_SUCCESS);
     } catch (const exception &e) {

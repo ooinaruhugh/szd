@@ -1,6 +1,8 @@
 #ifndef _EOCDR_H
 #define _EOCDR_H
 
+#include <iostream>
+#include <fstream>
 #include "../util.h"
 
 const DWORD eocdrMagic = 0x06054b50;
@@ -17,6 +19,9 @@ using EOCDR = struct EOCDR {
     DWORD startOfCDR;
     WORD commentSize() const { return comment.size(); }
     std::vector<char> comment;
+
+    EOCDR() {};
+    EOCDR(std::ifstream& zipfile, std::streampos at);
     
     std::vector<char> getAsByteArray() const;
 };
@@ -42,6 +47,6 @@ using EOCDR64Locator = struct EOCDR64Locator {
     DWORD numOfDisk;
 };
 
-std::ostream& operator<< (std::ostream& os, EOCDR eocdr);
+std::ostream& operator<< (std::ostream& os, const EOCDR &eocdr);
 
 #endif // _EOCDR_H
