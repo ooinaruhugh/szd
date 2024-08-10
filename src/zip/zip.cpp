@@ -32,7 +32,7 @@ ZipFile::ZipFile(const char *filename) {
     }
 
     zip.eocdr = EOCDR(file, eocdrPos);
-    //zip.cdr = readCDRs(eocdr.startOfCDR, eocdr.currentDiskEntriesTotal);
+    zip.cdr = readCDRs(zip.eocdr.startOfCDR, zip.eocdr.currentDiskEntriesTotal);
     // TODO: Are there any errors to handle?
     //zip.entries = getZipEntries(cdr);
 }
@@ -65,60 +65,21 @@ streampos ZipFile::findEOCDR() {
     return needle ? central_directory + (streamoff)(needle - searchBuffer.data()) : streampos(-1);
 }
 
-//vector<CDR> ZipFile::readCDRs(streampos beginAt, WORD noOfRecords) {
-//    unsigned char buffer[cdrSize];
-//
-//    file->clear();
-//    file->seekg(beginAt, file->beg);
-//
-//    while (noOfRecords > 0) {
-//        auto at = file->tellg();
-//        file->read(reinterpret_cast<char*>(buffer), cdrSize);
-//
-//        if (getDWordLE(buffer) != cdrMagic) {
-//            stringstream errMsg;
-//            errMsg << "Encountered a non-central directory record at "
-//                   << hex << at;
-//            throw runtime_error(errMsg.str());
-//        }
-//
-//        CDR record{
-//            .versionMadeBy = getWordLE(buffer+4),
-//            .versionNeeded = getWordLE(buffer+6),
-//            .generalPurpose = getWordLE(buffer+8),
-//            .compressionMethod = getWordLE(buffer+10),
-//            .lastModTime = getWordLE(buffer+12),
-//            .lastModDate = getWordLE(buffer+14),
-//            .crc32 = getDWordLE(buffer+16),
-//            .compressedSize = getDWordLE(buffer+20),
-//            .uncompressedSize = getDWordLE(buffer+24),
-//            .diskNoStart = getWordLE(buffer+34),
-//            .internalAttr = getWordLE(buffer+36),
-//            .externalAttr = getDWordLE(buffer+38),
-//            .relOffset = getDWordLE(buffer+42)
-//        };
-//
-//        auto filenameLength = getWordLE(buffer+28);
-//        auto extraLength = getWordLE(buffer+30);
-//        auto commentLength = getWordLE(buffer+32);
-//
-//        record.filename.resize(filenameLength);
-//        file->read(record.filename.data(), filenameLength);
-//
-//        record.extra.resize(extraLength);
-//        file->read(record.extra.data(), extraLength);
-//
-//        record.comment.resize(commentLength);
-//        file->read(record.comment.data(), commentLength);
-//
-//        cdr.emplace_back(record);
-//
-//        noOfRecords--;
-//    } 
-//
-//    return cdr;
-//
-//}
+vector<CDR> ZipFile::readCDRs(streampos beginAt, WORD noOfRecords) {
+    vector<CDR> cdrs;
+    file.clear();
+    file.seekg(beginAt, file.beg);
+
+    while (noOfRecords > 0) {
+        auto at = file.tellg();
+        cdrs.emplace_back(file, at);
+
+        noOfRecords--;
+    } 
+
+    return cdrs;
+
+}
 //
 //vector<LocalHeader> ZipFile::getZipEntries(vector<CDR> cdrs) {
 //    vector<LocalHeader> entries;

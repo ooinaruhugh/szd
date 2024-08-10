@@ -103,6 +103,10 @@ int main(int argc, char const **argv) {
         ZipFile zipf{zipfile};
         cout << zipf.zip.eocdr << endl;
 
+        for (auto cdr = begin(zipf.zip.cdr), last = end(zipf.zip.cdr); cdr != last; ++cdr) {
+          cout << *cdr << endl;
+        }
+
         exit(EXIT_SUCCESS);
     } catch (const exception &e) {
         cerr << "error: " << e.what() << endl;

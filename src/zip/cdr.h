@@ -7,25 +7,27 @@ const DWORD cdrMagic = 0x02014b50;
 
 const size_t cdrSize = 46;
 using CDR = struct CDR {
-    WORD versionMadeBy;
-    WORD versionNeeded;
-    WORD generalPurpose;
-    WORD compressionMethod;
-    WORD lastModTime;
-    WORD lastModDate;
+    WORD  versionMadeBy;
+    WORD  versionNeeded;
+    WORD  generalPurpose;
+    WORD  compressionMethod;
+    WORD  lastModTime;
+    WORD  lastModDate;
     DWORD crc32;
     DWORD compressedSize;
     DWORD uncompressedSize;
-    WORD filenameLength() const { return filename.size(); }
-    WORD extraLength() const { return extra.size(); }
-    WORD commentLength() const { return comment.size(); }
-    WORD diskNoStart;
-    WORD internalAttr;
+    WORD  filenameLength() const { return filename.size(); }
+    WORD  extraLength() const { return extra.size(); }
+    WORD  commentLength() const { return comment.size(); }
+    WORD  diskNoStart;
+    WORD  internalAttr;
     DWORD externalAttr;
     DWORD relOffset;
     std::vector<char> filename;
     std::vector<char> extra;
     std::vector<char> comment;
+
+    CDR(std::ifstream &zipfile, std::streampos at);
 
     std::vector<char> getAsByteArray() const;
     
@@ -33,5 +35,6 @@ using CDR = struct CDR {
 };
 
 std::ostream& operator<< (std::ostream& os, const CDR &record);
+std::ostream& operator<< (std::ostream& os, const std::vector<CDR> &cdr);
 
 #endif // _CDR_H

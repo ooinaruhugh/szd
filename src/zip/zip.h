@@ -64,7 +64,7 @@ public:
     /// @param beginAt 
     /// @param noOfRecords 
     /// @return 
-    //std::vector<CDR> readCDRs(std::streampos beginAt, WORD noOfRecords);
+    std::vector<CDR> readCDRs(std::streampos beginAt, WORD noOfRecords);
 
     /*
         Gets all zip entries with their associated headers and data from the file
